@@ -1,0 +1,4 @@
+/home/sky/programms/clion-242.14146.22/bin/cmake/linux/x64/bin/cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_MAKE_PROGRAM=/home/sky/programms/clion-242.14146.22/bin/ninja/linux/x64/ninja -G Ninja -S /home/sky/projects/Library -B /home/sky/projects/Library/cmake-build-debug
+-- Configuring done (0.0s)
+-- Generating done (0.0s)
+-- Build files have been written to: /home/sky/projects/Library/cmake-build-debug
