@@ -5,9 +5,7 @@
 #ifndef HANDLE_HPP
     #define HANDLE_HPP
 
-#include <utility>
-
-#include "memory.hpp"
+    #include "memory.hpp"
     #include "types.hpp"
 
     namespace lib {
@@ -148,7 +146,7 @@
                 reads = 0x3,
                 reads_and_metadata = 0x5,
                 all = 0x6,
-                safety_barriers = 0x7
+                safety_barriers = 0x7,
                 temporary = 0x8
             };
 
@@ -190,14 +188,13 @@
 
             virtual void set_append_only(bool value) noexcept;
             
-            constexpr caching kernel_caching() const noexcept {
+            [[nodiscard]] constexpr caching kernel_caching() const noexcept {
                 const bool safety_barriers_ = has_safety_barriers();
                 const bool caching_metadata = is_caching_metadata();
                 const bool caching_reads = is_caching_reads();
                 const bool caching_writes = is_caching_writes();
-                const bool caching_temporary = is_caching_temporary();
-                
-                if (caching_temporary)
+
+                if (is_caching_temporary())
                     return temporary;
                 if (caching_metadata && caching_reads && caching_writes)
                     return safety_barriers_ ? safety_barriers : all;
