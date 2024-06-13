@@ -2,6 +2,7 @@
 	#define MAT_HPP
 
 	#include "vec.hpp"
+	#include "iostream.hpp"
 
 	// TODO
 	// 1. helper (make_rotation_mat / translation / projection / point_at_mat)

@@ -21,8 +21,8 @@ int main() {
     auto temp = test.inverse();
 
     constexpr lib::string str = "readonly";
-    const lib::uint64 str_pos = str.find("only");
-    lib::uint64 ch_pos = str.find('o');
+    constexpr lib::uint64 str_pos = str.find("only");
+    constexpr lib::uint64 ch_pos = str.find('o');
 
     lib::cout << "hi";
     lib::cout << str_pos << ", " << ch_pos << lib::endl;

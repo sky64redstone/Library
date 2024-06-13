@@ -2,7 +2,7 @@
 	#define ARRAY_HPP
 
 	#include "types.hpp"
-	//#include "iostream.hpp"
+	#include "iostream.hpp"
 
 	namespace lib {
 		template <typename T, uint64 SIZE> requires (!lib::is_same_type<T, void>)

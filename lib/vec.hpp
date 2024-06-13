@@ -3,6 +3,7 @@
 
 	#include "types.hpp"
 	#include "math.hpp"
+	#include "iostream.hpp"
 
 	namespace lib {
 

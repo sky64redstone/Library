@@ -2,7 +2,7 @@
 	#define VECTOR_HPP
 
 	#include "types.hpp"
-	//#include "iostream.hpp"
+	#include "iostream.hpp"
 
 	namespace lib {
 		template <typename T>
