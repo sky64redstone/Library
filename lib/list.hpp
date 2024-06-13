@@ -23,7 +23,7 @@
 
 		public:
 			constexpr void push_back(T data) noexcept {
-				item<T>* new_item = new item<T>;
+				auto* new_item = new item<T>;
 				new_item->data = data;
 
 				if (first != nullptr) {
@@ -67,7 +67,14 @@
 				return T{ 0 };
 			}
 
-			[[nodiscard]] constexpr T* get(uint64 index) noexcept {
+			constexpr void push_front(T value) noexcept {
+				auto* ptr = new item<T>;
+				ptr->data = value;
+				ptr->next = first;
+				first = ptr;
+			}
+
+			[[nodiscard]] constexpr T* get(const uint64 index) noexcept {
 				if (first == nullptr) [[unlikely]]
 					return nullptr;
 
@@ -82,7 +89,7 @@
 				return &out->data;
 			}
 
-			[[nodiscard]] constexpr const T* get(uint64 index) const noexcept {
+			[[nodiscard]] constexpr const T* get(const uint64 index) const noexcept {
 				if (first == nullptr) [[unlikely]]
 					return nullptr;
 
@@ -98,7 +105,7 @@
 				return &out->data;
 			}
 
-			constexpr void set(uint64 index, T value) noexcept {
+			constexpr void set(const uint64 index, T value) noexcept {
 				if (first == nullptr) [[unlikely]]
 					return;
 
@@ -113,15 +120,20 @@
 				out->data = value;
 			}
 
-			constexpr void insert(uint64 desired_index, T value) noexcept {
+			constexpr void insert(const uint64 desired_index, T value) noexcept {
 				if (first == nullptr) {
-					item<T>* new_item = new item<T>;
+					auto* new_item = new item<T>;
 					new_item->data = value;
 					first = new_item;
 					return;
 				}
 
-				uint64 idx = desired_index - 1;
+				if (desired_index == 0) {
+					push_front(value);
+					return;
+				}
+
+				const uint64 idx = desired_index - 1;
 				item<T>* item_at_idx = first;
 				for (uint64 i = 0; i < idx; ++i) {
 					if (item_at_idx->next == nullptr) [[unlikely]]
@@ -130,22 +142,22 @@
 					item_at_idx = item_at_idx->next;
 				}
 
-				item<T>* new_item = new item<T>;
+				auto* new_item = new item<T>;
 				new_item->data = value;
 				new_item->next = item_at_idx->next; // set next ptr
 				item_at_idx->next = new_item; // set prev ptr
 			}
 
-			constexpr void remove(uint64 index, item<T>** out = nullptr) noexcept {
+			constexpr T remove(const uint64 index) noexcept {
 				if (first == nullptr) {
-					return;
+					return static_cast<T>(0);
 				}
 
-				uint64 idx = index - 1;
+				const uint64 idx = index - 1;
 				item<T>* item_at_idx = first;
 				for (uint64 i = 0; i < idx; ++i) {
 					if (item_at_idx->next == nullptr) [[unlikely]]
-						return; // the list hasn't even the item before the index
+						return static_cast<T>(0); // the list hasn't even the item before the index
 
 					item_at_idx = item_at_idx->next;
 				}
@@ -154,13 +166,13 @@
 
 				if (i != nullptr) {
 					item_at_idx->next = i->next;
-
-					if (out != nullptr) {
-						*out = i;
-					} else {
-						delete i;
-					}
 				}
+				if (item_at_idx != nullptr) {
+					T out = item_at_idx->data;
+					delete item_at_idx;
+					return out;
+				}
+				return static_cast<T>(0);
 			}
 
 			template <typename T_LIST>
@@ -201,7 +213,7 @@
 
 		public:
 			constexpr void push_back(T data) noexcept {
-				item<T>* new_item = new item<T>;
+				auto* new_item = new item<T>;
 				new_item->data = data;
 
 				if (first == nullptr) {
@@ -216,7 +228,31 @@
 				last = new_item;
 			}
 
-			[[nodiscard]] constexpr T* get(uint64 index) noexcept {
+			constexpr T pop_back() noexcept {
+				if (last == nullptr) {
+					return static_cast<T>(0);
+				}
+
+				item<T>* ptr = last;
+				last = ptr->prev;
+				T out = ptr->data;
+				delete ptr;
+
+				return out;
+			}
+
+			constexpr void push_front(T value) noexcept {
+				auto* ptr = new item<T>;
+				ptr->data = value;
+				ptr->prev = nullptr;
+				ptr->next = first;
+				first = ptr;
+				if (ptr->next != nullptr) {
+					ptr->next->prev = ptr;
+				}
+			}
+
+			[[nodiscard]] constexpr T* get(const uint64 index) noexcept {
 				if (first == nullptr) [[unlikely]]
 					return nullptr;
 
@@ -231,7 +267,7 @@
 				return &out->data;
 			}
 
-			[[nodiscard]] constexpr const T* get(uint64 index) const noexcept {
+			[[nodiscard]] constexpr const T* get(const uint64 index) const noexcept {
 				if (first == nullptr) [[unlikely]]
 					return nullptr;
 
@@ -244,6 +280,108 @@
 				}
 
 				return &out->data;
+			}
+
+			constexpr void set(const uint64 index, T value) noexcept {
+				if (first == nullptr) [[unlikely]]
+					return;
+
+				item<T>* out = first;
+				for (uint64 i = 0; i < index; ++i) {
+					if (out->next == nullptr) [[unlikely]]
+						return;
+
+					out = out->next;
+				}
+
+				out->data = value;
+			}
+
+			// don't use a 0 for the index!!!
+			constexpr void reverse_set(const uint64 index, T value) noexcept {
+				if (last == nullptr) [[unlikely]]
+					return;
+
+				if (index == 0) [[unlikely]]
+					return set(index, value);
+
+				item<T>* out = last;
+				for (uint64 i = index; i > 0; --i) {
+					if (out->prev == nullptr) [[unlikely]]
+						return;
+
+					out = out->prev;
+				}
+
+				out->data = value;
+			}
+
+			constexpr void insert(const uint64 desired_index, T value) noexcept {
+				if (first == nullptr) {
+					auto* new_item = new item<T>;
+					new_item->data = value;
+					first = new_item;
+					return;
+				}
+
+				if (desired_index == 0) {
+					push_front(value);
+					return;
+				}
+
+				const uint64 idx = desired_index - 1;
+				item<T>* item_at_idx = first;
+				for (uint64 i = 0; i < idx; ++i) {
+					if (item_at_idx->next == nullptr) [[unlikely]]
+						return; // the list hasn't even the item before the desired_index
+
+					item_at_idx = item_at_idx->next;
+				}
+
+				auto* new_item = new item<T>;
+				new_item->data = value;
+				new_item->next = item_at_idx->next; // set next ptr
+				item_at_idx->next = new_item; // set prev ptr
+			}
+
+			constexpr T remove(const uint64 index) noexcept {
+				if (first == nullptr) [[unlikely]]
+					return static_cast<T>(0);
+
+				item<T>* item_at_idx = first;
+				for (uint64 i = 0; i < index; ++i) {
+					if (item_at_idx->next == nullptr) [[unlikely]]
+						return static_cast<T>(0);
+
+					item_at_idx = item_at_idx->next;
+				}
+
+				item_at_idx->prev->next = item_at_idx->next;
+				item_at_idx->next->prev = item_at_idx->prev;
+
+				T out = item_at_idx->data;
+				delete item_at_idx;
+				return out;
+			}
+
+			constexpr T reverse_remove(const uint64 index) noexcept {
+				if (last == nullptr) [[unlikely]]
+					return static_cast<T>(0);
+
+				item<T>* item_at_idx = last;
+				for (uint64 i = index; i > 0; --i) {
+					if (item_at_idx->prev == nullptr) [[unlikely]]
+						return static_cast<T>(0);
+
+					item_at_idx = item_at_idx->prev;
+				}
+
+				item_at_idx->prev->next = item_at_idx->next;
+				item_at_idx->next->prev = item_at_idx->prev;
+
+				T out = item_at_idx->data;
+				delete item_at_idx;
+				return out;
 			}
 
 			template <typename T_LIST>

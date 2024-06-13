@@ -1,7 +1,7 @@
 # ninja log v6
-1	50	1717824118164838077	CMakeFiles/Library.dir/main.cpp.o.ddi	8fec83efa4e1d83f
-50	58	1717824118211505541	CMakeFiles/Library.dir/CXX.dd	ba1f82f8a3da0ae
-50	58	1717824118211505541	/home/sky/projects/Library/cmake-build-debug/CMakeFiles/Library.dir/CXXModules.json	ba1f82f8a3da0ae
-50	58	1717824118211505541	CMakeFiles/Library.dir/main.cpp.o.modmap	ba1f82f8a3da0ae
-58	243	1717824118221505712	CMakeFiles/Library.dir/main.cpp.o	a8516388863509e4
-243	335	1717824118404842177	Library	19af0acc37df700e
+6	152	1718265278142263117	CMakeFiles/Library.dir/main.cpp.o.ddi	8fec83efa4e1d83f
+152	158	1718265278295596684	CMakeFiles/Library.dir/CXX.dd	60258279ee6c7b61
+152	158	1718265278295596684	/home/sky/projects/Library/cmake-build-debug/CMakeFiles/Library.dir/CXXModules.json	60258279ee6c7b61
+152	158	1718265278295596684	CMakeFiles/Library.dir/main.cpp.o.modmap	60258279ee6c7b61
+158	369	1718265278295596684	CMakeFiles/Library.dir/main.cpp.o	a8516388863509e4
+369	475	1718265278505597004	Library	19af0acc37df700e

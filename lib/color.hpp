@@ -393,6 +393,12 @@
 		static_assert(sizeof(color4) == (sizeof(lib::ubyte) * 4) && sizeof(color4) == sizeof(lib::uint32));
 
 		template <typename COLOR>
+		inline constexpr bool is_color3 = is_same_type<COLOR, color3>;
+
+		template <typename COLOR>
+		inline constexpr bool is_color4 = is_same_type<COLOR, color4>;
+
+		template <typename COLOR>
 		inline constexpr bool is_color = is_any_of_type<COLOR, color3, color4>;
 	}
 

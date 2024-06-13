@@ -21,10 +21,11 @@ int main() {
     auto temp = test.inverse();
 
     constexpr lib::string str = "readonly";
-    lib::uint64 str_pos = str.find("only");
+    const lib::uint64 str_pos = str.find("only");
     lib::uint64 ch_pos = str.find('o');
 
-    unused(lib::cout << "hi");
+    lib::cout << "hi";
+    lib::cout << str_pos << ", " << ch_pos << lib::endl;
 
     return (temp.m00 = 0);
 }

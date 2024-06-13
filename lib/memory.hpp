@@ -6,7 +6,7 @@
 
 	namespace lib {
 		template <typename T>
-		constexpr inline T* memcpy(const T* const src, T* const dest, const uint64 count, const uint64 offset = 0) noexcept {
+		constexpr T* memcpy(const T* const src, T* const dest, const uint64 count, const uint64 offset = 0) noexcept {
 			if (src == nullptr || dest == nullptr)
 				return nullptr;
 
@@ -44,7 +44,7 @@
 		}
 
 		template <typename T>
-		constexpr inline T* memmove(T* const src, T* const dest, const uint64 count, const uint64 offset = 0) noexcept {
+		constexpr T* memmove(T* const src, T* const dest, const uint64 count, const uint64 offset = 0) noexcept {
 			if (src == nullptr || dest == nullptr)
 				return nullptr;
 
@@ -84,7 +84,7 @@
 		}
 
 		template <typename T>
-		constexpr inline T* memset(T* const ptr, const T& value, const uint64 count, const uint64 offset = 0) noexcept {
+		constexpr T* memset(T* const ptr, const T& value, const uint64 count, const uint64 offset = 0) noexcept {
 			if (ptr == nullptr)
 				return nullptr;
 
@@ -120,7 +120,7 @@
 		}
 
 		template <typename T>
-		constexpr inline T* memset_point(T* ptr, const T& value, const uint64 x, const uint64 y, const uint64 size_w) noexcept {
+		constexpr T* memset_point(T* ptr, const T& value, const uint64 x, const uint64 y, const uint64 size_w) noexcept {
 			if (ptr == nullptr) [[unlikely]]
 				return nullptr;
 
@@ -134,7 +134,7 @@
 		// https://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm
 		// todo: code more efficient way to set the value at p(x, y)
 		template <typename T>
-		constexpr inline void memset_line(T* ptr, const T& value, int64 x0, int64 y0, const int64 x1, const int64 y1, const uint64 size_w) noexcept {
+		constexpr void memset_line(T* ptr, const T& value, int64 x0, int64 y0, const int64 x1, const int64 y1, const uint64 size_w) noexcept {
 			if (ptr == nullptr)
 				return;
 
@@ -192,7 +192,7 @@
 
 		// https://en.wikipedia.org/wiki/Xiaolin_Wu's_line_algorithm
 		template <typename T>
-		constexpr inline void memset_line_antialised(T* ptr, const T& value, double x0, double y0, double x1, double y1, const uint64 size_w) noexcept {
+		constexpr void memset_line_antialised(T* ptr, const T& value, double x0, double y0, double x1, double y1, const uint64 size_w) noexcept {
 			if (ptr == nullptr)
 				return;
 
@@ -286,7 +286,7 @@
 		}
 
 		template <typename T>
-		constexpr inline void memset_rect(T* ptr, const T& value, uint64 x, const uint64 y, const uint64 w, const uint64 h, const uint64 size_w) noexcept {
+		constexpr void memset_rect(T* ptr, const T& value, uint64 x, const uint64 y, const uint64 w, const uint64 h, const uint64 size_w) noexcept {
 			if (ptr == nullptr)
 				return;
 
@@ -329,7 +329,7 @@
 		}
 
 		template <typename T>
-		constexpr inline void memswap(T* const first, T* const second) noexcept {
+		constexpr void memswap(T* const first, T* const second) noexcept {
 			T temp{};
 			lib::memcpy<T>(first, &temp, 1);
 			lib::memcpy<T>(second, first, 1);
@@ -337,7 +337,7 @@
 		}
 
 		template <typename T>
-		constexpr inline void memswap(T& first, T& second) noexcept {
+		constexpr void memswap(T& first, T& second) noexcept {
 			T temp = first;
 			first = second;
 			second = temp;
@@ -412,7 +412,6 @@
 			}
 
 			constexpr void destroy() noexcept {
-				// TODO search if clang / msvc implemented it the same
 				//if (ptr) // Clang-Tidy: 'if' statement is unnecessary; deleting null pointer has no effect
 				delete ptr;
 			}
@@ -422,7 +421,7 @@
 
 				ptr = nullptr;
 
-				return ptr;
+				return temp;
 			}
 
 			[[nodiscard]] constexpr T& operator*() noexcept {
