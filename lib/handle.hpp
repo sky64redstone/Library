@@ -5,6 +5,7 @@
 #ifndef HANDLE_HPP
     #define HANDLE_HPP
 
+#include "array.hpp"
     #include "memory.hpp"
     #include "types.hpp"
 
@@ -210,6 +211,7 @@
             
             [[nodiscard]] constexpr flags get_flags() const noexcept { return flag; }
             [[nodiscard]] constexpr native_handle native() const noexcept { return data; }
+            [[nodiscard]] constexpr bool is_valid() const noexcept { return data.is_valid(); }
 
             [[nodiscard]] constexpr bool is_readable() const noexcept { return data.is_readable(); }
             [[nodiscard]] constexpr bool is_writeable() const noexcept { return data.is_writeable(); }
@@ -239,6 +241,64 @@
             [[nodiscard]] constexpr bool is_caching_writes() const noexcept { return data.is_caching_writes(); }
             [[nodiscard]] constexpr bool is_caching_temporary() const noexcept { return data.is_caching_temporary(); }
         };
+
+        // Platform-dependent implementation
+	    #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__CYGWIN__)
+            inline handle::~handle() noexcept {
+                if (data.is_valid()) {
+                    if (!handle::close()) {
+                        #ifndef NDEBUG
+                            //log_debug();
+                        #endif
+                        //log_fatal();
+                        //abort();
+                    }
+                }
+            }
+
+            inline bool handle::close() noexcept {
+                if (data.is_valid()) {
+                    if (has_safety_barriers() && is_writeable()) {
+                        if (FlushFileBuffers(data.handle) == 0) [[unlikely]] {
+                            return false; // error
+                        }
+                    }
+                    if (CloseHandle(data.handle) == 0) [[unlikely]] {
+                        return false; // error
+                    }
+                }
+                return true; // success
+            }
+
+            inline handle handle::clone() const noexcept {
+                handle out(native_handle{}, flag);
+                out.data.handle = INVALID_HANDLE_VALUE;
+                if (DuplicateHandle(GetCurrentProcess(), data.handle, GetCurrentProcess(), &out.data.handle, 0, 0, DUPLICATE_SAME_ACCESS) == 0) {
+                    out.data.data = -1;
+                    return out;
+                }
+                return out;
+            }
+
+            inline void handle::set_append_only(const bool value) noexcept {
+                if (value) {
+                    data.flag |= native_handle::flags::append_only;
+                } else {
+                    constexpr uint32 no_append_only = ~native_handle::flags::append_only;
+                    data.flag &= no_append_only;
+                }
+            }
+        #elif defined(posix) || defined(__posix) || defined(__posix__)
+            inline handle::~handle() {
+                if (data.is_valid()) {
+                    if (!handle::close()) {
+                        //log_fatal();
+                        //abort();
+                    }
+                }
+            }
+        #endif
+
     }
 
 #endif //HANDLE_HPP
