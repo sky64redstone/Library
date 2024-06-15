@@ -5,10 +5,19 @@
 #ifndef HANDLE_HPP
     #define HANDLE_HPP
 
+
     #include "global_error.hpp"
     #include "process.hpp"
     #include "memory.hpp"
     #include "types.hpp"
+
+    #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__CYGWIN__)
+        #include <windows.h>
+    #elif defined(unix) || defined(__unix) || defined(__unix__)
+        #include <unistd.h>
+        #include <fcntl.h>
+        #include <errno.h>
+    #endif
 
     namespace lib {
         struct native_handle {
@@ -188,7 +197,7 @@
                 return out;
             }
 
-            virtual void set_append_only(bool value) noexcept;
+            virtual void set_append_only(const bool value) noexcept;
             
             [[nodiscard]] constexpr caching kernel_caching() const noexcept {
                 const bool safety_barriers_ = has_safety_barriers();
@@ -248,7 +257,7 @@
                 if (data.is_valid()) {
                     if (!handle::close()) {
                         //log_fatal();
-                        //lib::abort();
+                        lib::terminate(error_handle_close);
                     }
                 }
             }
@@ -290,8 +299,72 @@
                 if (data.is_valid()) {
                     if (!handle::close()) {
                         //log_fatal();
-                        //lib::terminate();
+                        lib::terminate(error_handle_close);
                     }
+                }
+            }
+
+            inline bool handle::close() noexcept {
+                if (data.is_valid()) {
+                    if (has_safety_barriers() && is_writeable() && !is_pipe()) {
+                        if (fsync(data.fd) == -1) {
+                            return false;
+                        }
+                    }
+                    if (::close(data.fd) == -1) {
+                        return false;
+                    }
+                    data = native_handle{};
+                }
+                return true;
+            }
+
+            inline handle handle::clone() const noexcept {
+                handle out(native_handle{}, flag);
+
+                out.data.flag = data.flag;
+                out.data.fd = ::fcntl(data.fd, F_DUPFD_CLOEXEC, 0);
+
+                if (out.data.fd == -1) {
+                    if (errno == EBADF) {
+                        out.data.fd = ::fcntl(data.fd, F_DUPFD, 0);
+
+                        if (out.data.fd == -1) {
+                            int attribs = ::fcntl(data.fd, F_GETFL);
+                            if (attribs == -1) {
+                                out.data.fd = -1;
+                                return out;
+                            }
+                            attribs |= FD_CLOEXEC;
+                            if (::fcntl(data.fd, F_SETFL, attribs) == -1) {
+                                out.data.fd = -1;
+                            }
+                        }
+                    }
+                }
+
+                return out;
+            }
+
+            inline void handle::set_append_only(const bool value) noexcept {
+                int attribs = ::fcntl(data.fd, F_GETFL);
+
+                if (attribs == -1) {
+                    return;
+                }
+
+                if (value) {
+                    attribs |= O_APPEND;
+                    if (::fcntl(data.fd, F_SETFL, attribs) == -1) {
+                        return;
+                    }
+                    data.flag |= native_handle::flags::append_only;
+                } else {
+                    attribs &= ~O_APPEND;
+                    if (::fcntl(data.fd, F_SETFL, attribs) == -1) {
+                        return;
+                    }
+                    data.flag &= ~native_handle::flags::append_only;
                 }
             }
         #endif
