@@ -20,4 +20,5 @@ add_executable(Library main.cpp
         lib/time.hpp
         lib/assert.hpp
         lib/handle.hpp
-        lib/image.hpp)
+        lib/image.hpp
+        lib/process.hpp)

@@ -5,7 +5,7 @@
 #ifndef HANDLE_HPP
     #define HANDLE_HPP
 
-#include "array.hpp"
+    #include "process.hpp"
     #include "memory.hpp"
     #include "types.hpp"
 
@@ -211,7 +211,6 @@
             
             [[nodiscard]] constexpr flags get_flags() const noexcept { return flag; }
             [[nodiscard]] constexpr native_handle native() const noexcept { return data; }
-            [[nodiscard]] constexpr bool is_valid() const noexcept { return data.is_valid(); }
 
             [[nodiscard]] constexpr bool is_readable() const noexcept { return data.is_readable(); }
             [[nodiscard]] constexpr bool is_writeable() const noexcept { return data.is_writeable(); }
