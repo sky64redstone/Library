@@ -5,6 +5,7 @@
 #ifndef HANDLE_HPP
     #define HANDLE_HPP
 
+    #include "global_error.hpp"
     #include "process.hpp"
     #include "memory.hpp"
     #include "types.hpp"
@@ -246,11 +247,8 @@
             inline handle::~handle() noexcept {
                 if (data.is_valid()) {
                     if (!handle::close()) {
-                        #ifndef NDEBUG
-                            //log_debug();
-                        #endif
                         //log_fatal();
-                        //abort();
+                        //lib::abort();
                     }
                 }
             }
@@ -287,12 +285,12 @@
                     data.flag &= no_append_only;
                 }
             }
-        #elif defined(posix) || defined(__posix) || defined(__posix__)
+        #elif defined(unix) || defined(__unix) || defined(__unix__)
             inline handle::~handle() {
                 if (data.is_valid()) {
                     if (!handle::close()) {
                         //log_fatal();
-                        //abort();
+                        //lib::terminate();
                     }
                 }
             }

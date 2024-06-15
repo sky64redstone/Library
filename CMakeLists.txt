@@ -21,4 +21,5 @@ add_executable(Library main.cpp
         lib/assert.hpp
         lib/handle.hpp
         lib/image.hpp
-        lib/process.hpp)
+        lib/process.hpp
+        lib/global_error.hpp)

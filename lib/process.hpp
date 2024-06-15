@@ -20,11 +20,11 @@
     #endif
 
     namespace lib {
-        inline void exit(const int exit_code) noexcept {
+        inline void terminate(const int exit_code) noexcept {
             #if defined(unix) || defined(__unix__) || defined(__unix)
                 ::_exit(exit_code);
             #elif defined(_WIN32) || defined(_WIN64)
-                // TODO windows program exit
+                // https://www.aloneguid.uk/posts/2023/03/terminate-win32-process/
             #endif
         }
     }
