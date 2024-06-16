@@ -43,7 +43,7 @@
 				data[position] = value;
 			}
 
-			constexpr void fill(uint64 from, uint64 to, const T& value) noexcept {
+			constexpr void fill(const uint64 from, const uint64 to, const T& value) noexcept {
 				for (uint64 i = from; i <= to; ++i) {
 					set(i, value);
 				}
@@ -81,7 +81,7 @@
 
 			#ifdef IOSTREAM_HPP
 				template <typename T_ARRAY, uint64 S>
-				friend const lib::ostream& operator<<(const lib::ostream& out, const lib::array<T_ARRAY, S> arr) {
+				friend const lib::ostream& operator<<(const lib::ostream& out, const lib::array<T_ARRAY, S> arr) noexcept {
 					out << "{ ";
 					for (uint64 i = 0; i < S; ++i) {
 						if (i != 0) {

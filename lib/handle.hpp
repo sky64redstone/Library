@@ -12,6 +12,7 @@
     #include "types.hpp"
 
     #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__CYGWIN__)
+		#define NOMINMAX
         #include <windows.h>
     #elif defined(unix) || defined(__unix) || defined(__unix__)
         #include <unistd.h>
@@ -180,7 +181,7 @@
             }
 
         public:
-            handle& operator=(handle&& other) noexcept {
+            constexpr handle& operator=(handle&& other) noexcept {
                 if (this == &other) return *this;
                 this->~handle();
                 new(this) handle(move(other));
@@ -192,12 +193,12 @@
 
             [[nodiscard]] handle clone() const noexcept;
 
-            virtual native_handle release() noexcept {
+            constexpr virtual native_handle release() noexcept {
                 native_handle out{ move(data) };
                 return out;
             }
 
-            virtual void set_append_only(const bool value) noexcept;
+            virtual void set_append_only(bool value) noexcept;
             
             [[nodiscard]] constexpr caching kernel_caching() const noexcept {
                 const bool safety_barriers_ = has_safety_barriers();
@@ -251,11 +252,87 @@
             [[nodiscard]] constexpr bool is_caching_temporary() const noexcept { return data.is_caching_temporary(); }
         };
 
+        enum class file_type {
+            none,
+            unknown,
+            not_found,
+            regular,
+            directory,
+            symlink,
+            block,
+            character,
+            fifo,
+            socket,
+        };
+
+        struct stat {
+            uint64 st_dev; // posix only: inode of device containing file
+            uint64 st_ino;
+            file_type st_type;
+            #if !defined(WIN32) && !defined(_WIN32) && !defined(__WIN32__) && !defined(__CYGWIN__)
+                uint16 permissions;
+                int16 user_id;
+                int16 group_id;
+                dev_t
+            #endif
+            int16 st_nlink; // num of hard links
+        };
+
+        struct fs_handle : nocopy {
+            using dev_type = uint64;
+            using ino_type = uint64;
+            using unique_id_type = uint128;
+
+        protected:
+            mutable dev_type devid = 0;
+            mutable ino_type inode = 0;
+
+            // returns true on success
+            bool fetch_inode() const noexcept;
+
+            virtual const handle& get_handle() const noexcept = 0;
+
+            virtual bool replace_handle(handle&& other) noexcept = 0;
+
+            constexpr  fs_handle() = default;
+            constexpr ~fs_handle() = default;
+
+            constexpr fs_handle(const dev_type devid, const ino_type inode) noexcept : devid(devid), inode(inode) {}
+            constexpr fs_handle(fs_handle&& other) noexcept : devid(other.devid), inode(other.inode) {
+                other.devid = 0; other.inode = 0;
+            }
+
+            constexpr fs_handle& operator=(fs_handle&& other) noexcept {
+                if (this == &other) return *this;
+                devid = other.devid;
+                inode = other.inode;
+                other.devid = 0;
+                other.inode = 0;
+                return *this;
+            }
+
+        public:
+            constexpr dev_type st_dev() const noexcept {
+                if (devid == 0 && inode == 0) (void)fetch_inode();
+                return devid;
+            }
+
+            constexpr ino_type st_ino() const noexcept {
+                if (devid == 0 && inode == 0) (void)fetch_inode();
+                return inode;
+            }
+
+            constexpr unique_id_type unique_id() const noexcept {
+                if (devid == 0 && inode == 0) (void)fetch_inode();
+                return unique_id_type{ devid, inode };
+            }
+        };
+
         // Platform-dependent implementation
 	    #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__CYGWIN__)
             inline handle::~handle() noexcept {
                 if (data.is_valid()) {
-                    if (!handle::close()) {
+                    if (!handle::close()) [[unlikely]] {
                         //log_fatal();
                         lib::terminate(error_handle_close);
                     }
@@ -294,6 +371,11 @@
                     data.flag &= no_append_only;
                 }
             }
+
+            inline bool fs_handle::fetch_inode() const noexcept {
+                stat s;
+            }
+
         #elif defined(unix) || defined(__unix) || defined(__unix__)
             inline handle::~handle() {
                 if (data.is_valid()) {
