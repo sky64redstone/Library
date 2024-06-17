@@ -24,7 +24,7 @@
 			T* ptr;
 
 		public:
-			atomic() noexcept {
+			constexpr atomic() noexcept {
 				ptr = new T;
 				*ptr = static_cast<T>(0);
 			}
