@@ -273,7 +273,7 @@
                 uint16 permissions;
                 int16 user_id;
                 int16 group_id;
-                dev_t
+                // dev_t; // todo
             #endif
             int16 st_nlink; // num of hard links
         };

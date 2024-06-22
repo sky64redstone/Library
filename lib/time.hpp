@@ -4,7 +4,7 @@
 	#include "types.hpp"
 
 	namespace lib {
-		[[nodiscard]] constexpr inline int64 make_denominator(int64 numerator, int64 denominator) noexcept {
+		[[nodiscard]] constexpr int64 make_denominator(int64 numerator, int64 denominator) noexcept {
 			if (numerator == 0 && denominator == 0) {
 				return 1;
 			}
@@ -23,7 +23,7 @@
 			return denom / numerator;
 		}
 
-		[[nodiscard]] constexpr inline int64 make_numerator(int64 numerator, int64 denominator) noexcept {
+		[[nodiscard]] constexpr int64 make_numerator(int64 numerator, int64 denominator) noexcept {
 			const int64 sign = (numerator >= 0 ? 1 : -1) * (denominator >= 0 ? 1 : -1);
 
 			if (numerator == 0 && denominator == 0) {
@@ -71,7 +71,7 @@
 		template <typename data_type_, typename period_>
 		class time_value {
 		public:
-			using this_type = time_value<data_type_, period_>;
+			using type = time_value;
 			using data_type = data_type_;
 			using period = period_;
 
@@ -85,74 +85,75 @@
 				this->data = value;
 			}
 
-			constexpr time_value(const this_type& other) noexcept {
+			constexpr time_value(const type& other) noexcept {
 				this->data = other.data;
 			}
 
 			template <typename other_data_type, typename other_period>
 			constexpr time_value(const time_value<other_data_type, other_period>& other) {
-				this->data = lib::time_cast<this_type>(other);
+				this->data = lib::time_cast<type>(other);
 			}
 
 			[[nodiscard]] constexpr data_type count() const noexcept {
 				return data;
 			}
 
-			[[nodiscard]] constexpr this_type& operator+() const noexcept {
+			[[nodiscard]] constexpr type& operator+() const noexcept {
 				this->data = +this->data;
 				return *this;
 			}
 
-			[[nodiscard]] constexpr this_type& operator-() const noexcept {
+			[[nodiscard]] constexpr type& operator-() const noexcept {
 				this->data = -this->data;
 				return *this;
 			}
 
-			constexpr this_type& operator++() noexcept {
+			constexpr type& operator++() noexcept {
 				++data;
 				return *this;
 			}
 
-			[[nodiscard]] constexpr this_type operator++(int) noexcept {
+			[[nodiscard]] constexpr type operator++(int) noexcept {
 				return this_type(data++);
 			}
 
-			constexpr this_type& operator--() noexcept {
+			constexpr type& operator--() noexcept {
 				--data;
 				return *this;
 			}
 
-			[[nodiscard]] constexpr this_type operator--(int) noexcept {
+			[[nodiscard]] constexpr type operator--(int) noexcept {
 				return this_type(data--);
 			}
 
-			constexpr this_type& operator+=(const this_type& other) noexcept {
+			constexpr type& operator+=(const type& other) noexcept {
 				data = other.data;
 				return *this;
 			}
 
-			constexpr this_type& operator-=(const this_type& other) noexcept {
+			constexpr type& operator-=(const type& other) noexcept {
 				data -= other.data;
 				return *this;
 			}
 
-			constexpr this_type& operator*=(const data_type& value) noexcept {
+			constexpr type& operator*=(const data_type& value) noexcept {
 				data *= value;
 				return *this;
 			}
 
-			constexpr this_type& operator/=(const data_type& value) noexcept {
+			constexpr type& operator/=(const data_type& value) noexcept {
 				data /= value;
 				return *this;
 			}
 
-			constexpr this_type& operator%=(const data_type& value) noexcept {
+			constexpr type& operator%=(const data_type& value) noexcept {
 				data %= value;
 				return *this;
 			}
 		};
 
-		struct time_point {
+		// time_point time_values are unsigned
+		namespace time_point {
 			using nanoseconds	= time_value<uint64, time_ratio<1, 1'000'000'000ULL>>;
 			using microseconds	= time_value<uint64, time_ratio<1, 1'000'000ULL>>;
 			using milliseconds	= time_value<uint64, time_ratio<1, 1'000>>;
@@ -163,12 +164,10 @@
 			using weeks			= time_value<uint32, time_ratio<7 * 24 * 3600, 1>>;
 			using months		= time_value<uint32, time_ratio<146097ULL * 24 * 3600, 12 * 400>>;
 			using years			= time_value<uint32, time_ratio<146097ULL * 24 * 3600, 400>>;
-
-		private:
-			time_point() = default;
 		};
 
-		struct time_duration {
+		// time_duration time_values are signed
+		namespace time_duration {
 			using nanoseconds	= time_value<int64, time_ratio<1, 1'000'000'000ULL>>;
 			using microseconds	= time_value<int64, time_ratio<1, 1'000'000ULL>>;
 			using milliseconds	= time_value<int64, time_ratio<1, 1'000>>;
@@ -179,9 +178,6 @@
 			using weeks			= time_value<int32, time_ratio<7 * 24 * 3600, 1>>;
 			using months		= time_value<int32, time_ratio<146097ULL * 24 * 3600, 12 * 400>>;
 			using years			= time_value<int32, time_ratio<146097ULL * 24 * 3600, 400>>;
-
-		private:
-			time_duration() = default;
 		};
 
 		// 100ns precision (win32: <1us)
