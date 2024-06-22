@@ -1,4 +1,0 @@
-ToolSet: 1.0 (local)Ninja: 1.12.0@/home/sky/programms/clion-242.14146.22/bin/ninja/linux/x64/ninja
-Options: 
-
-Options:-DCMAKE_MAKE_PROGRAM=/home/sky/programms/clion-242.14146.22/bin/ninja/linux/x64/ninja
