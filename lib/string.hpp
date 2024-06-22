@@ -481,7 +481,7 @@
 				}
 			}
 
-			constexpr T set(uint64 position, T value) noexcept {
+			constexpr T set(const uint64 position, T value) noexcept {
 				T& ref = at(position);
 				T  old = ref;
 
@@ -490,7 +490,7 @@
 				return old;
 			}
 
-			constexpr void erase(uint64 first, uint64 last = 0xFFFFFFFFFFFFFFFE) noexcept {
+			constexpr void erase(const uint64 first, uint64 last = 0xFFFFFFFFFFFFFFFE) noexcept {
 				if (first > size()) [[unlikely]]
 					return;
 
@@ -523,7 +523,7 @@
 			}
 
 			constexpr void insert(T ch, uint64 position) noexcept {
-				uint64 prev_size = size();
+				const uint64 prev_size = size();
 				set_size(prev_size + 1);
 
 				if (position >= prev_size) {
@@ -584,6 +584,15 @@
 
 			[[nodiscard]] constexpr uint64 find(T ch) const noexcept {
 				for (uint64 i = 0; i < size(); ++i) {
+					if (this->at(i) == ch)
+						return i;
+				}
+
+				return max_size();
+			}
+
+			[[nodiscard]] constexpr uint64 find(uint64 from_index, T ch) const noexcept {
+				for (uint64 i = from_index; i < size(); ++i) {
 					if (this->at(i) == ch)
 						return i;
 				}
@@ -941,10 +950,10 @@
 			} while (unsigned_value_truncated != 0);
 
 			return next;
-		};
+		}
 
 		template <typename STR_T, typename INT_T> requires is_char_type<STR_T> && is_int_type<INT_T>
-		[[nodiscard]] constexpr inline basic_string<STR_T> int_to_basic_string(const INT_T value) noexcept {
+		[[nodiscard]] constexpr basic_string<STR_T> int_to_basic_string(const INT_T value) noexcept {
 			using unsigned_type = make_unsigned<INT_T>;
 
 			STR_T buffer[21]{};
@@ -964,22 +973,22 @@
 		}
 
 		template <typename INT_T> requires is_int_type<INT_T>
-		[[nodiscard]] constexpr inline string int_to_string(INT_T value) noexcept {
+		[[nodiscard]] constexpr string int_to_string(INT_T value) noexcept {
 			return lib::int_to_basic_string<string::char_type, INT_T>(value);
 		}
 
 		template <typename INT_T> requires is_int_type<INT_T>
-		[[nodiscard]] constexpr inline wstring int_to_wstring(INT_T value) noexcept {
+		[[nodiscard]] constexpr wstring int_to_wstring(INT_T value) noexcept {
 			return lib::int_to_basic_string<wstring::char_type, INT_T>(value);
 		}
 
 		template <typename INT_T> requires is_int_type<INT_T>
-		[[nodiscard]] constexpr inline tstring int_to_tstring(INT_T value) noexcept {
+		[[nodiscard]] constexpr tstring int_to_tstring(INT_T value) noexcept {
 			return lib::int_to_basic_string<tstring::char_type, INT_T>(value);
 		}
 
 		template <typename STR_T> requires is_char_type<STR_T>
-		[[nodiscard]] constexpr inline STR_T hex_from_byte(byte value) noexcept {
+		[[nodiscard]] constexpr STR_T hex_from_byte(byte value) noexcept {
 			if (value < 10)
 				return '0' + value;
 
@@ -989,7 +998,7 @@
 		}
 
 		template <typename STR_T, typename INT_T> requires is_char_type<STR_T> && is_int_type<INT_T>
-		[[nodiscard]] constexpr inline STR_T* hex_to_cstring(STR_T* next, INT_T value) noexcept {
+		[[nodiscard]] constexpr STR_T* hex_to_cstring(STR_T* next, INT_T value) noexcept {
 			using utype = lib::make_unsigned<INT_T>;
 
 			auto uvalue = static_cast<utype>(value);
@@ -1003,7 +1012,7 @@
 		};
 
 		template <typename STR_T, typename INT_T> requires is_char_type<STR_T> && is_int_type<INT_T>
-		[[nodiscard]] constexpr inline basic_string<STR_T> hex_to_basic_string(const INT_T value) {
+		[[nodiscard]] constexpr basic_string<STR_T> hex_to_basic_string(const INT_T value) {
 			STR_T buffer[16]{};
 			STR_T* buffer_size = lib::char_traits<STR_T>::end(buffer);
 			STR_T* next = buffer_size;
@@ -1014,12 +1023,12 @@
 		}
 
 		template <typename INT_T> requires is_int_type<INT_T>
-		[[nodiscard]] constexpr inline string hex_to_string(const INT_T value) {
+		[[nodiscard]] constexpr string hex_to_string(const INT_T value) {
 			return lib::hex_to_basic_string<string::char_type, INT_T>(value);
 		}
 
 		template <typename INT_T> requires is_int_type<INT_T>
-		[[nodiscard]] constexpr inline wstring hex_to_wstring(const INT_T value) {
+		[[nodiscard]] constexpr wstring hex_to_wstring(const INT_T value) {
 			return lib::hex_to_basic_string<wstring::char_type, INT_T>(value);
 		}
 
@@ -1377,7 +1386,7 @@
 		}
 
 		template <typename INT_T> requires is_int_type<INT_T>
-		[[nodiscard]] constexpr inline string binary_to_string(const INT_T value) noexcept {
+		[[nodiscard]] constexpr string binary_to_string(const INT_T value) noexcept {
 			return lib::binary_to_basic_string<string::char_type, INT_T>(value);
 		}
 
