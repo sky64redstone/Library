@@ -1,3 +1,0 @@
-C:/Users/jonat/Desktop/src/C++/Library/cmake-build-debug/CMakeFiles/Library.dir
-C:/Users/jonat/Desktop/src/C++/Library/cmake-build-debug/CMakeFiles/edit_cache.dir
-C:/Users/jonat/Desktop/src/C++/Library/cmake-build-debug/CMakeFiles/rebuild_cache.dir

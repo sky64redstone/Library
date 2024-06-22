@@ -1,5 +1,0 @@
-ToolSet: 11.0 w64 (local)@C:\Program Files\JetBrains\CLion 242.14146.22\bin\mingw
-Ninja: 1.12.0@C:\Program Files\JetBrains\CLion 242.14146.22\bin\ninja\win\x64\ninja.exe
-Options: 
-
-Options:
