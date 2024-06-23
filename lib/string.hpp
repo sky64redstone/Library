@@ -349,7 +349,7 @@
 
 				T_ data[buffer_size];
 
-				constexpr void init(uint64 size) noexcept {
+				constexpr void init(const uint64 size) noexcept {
 					this->from_stack = true;
 					this->size = static_cast<ubyte>(size);
 				}
@@ -531,10 +531,46 @@
 					return;
 				}
 				
-				T* src = data() + position;
-				lib::memmove<T>(src, src + 1, prev_size - position);
+				T* dest = data() + position;
+				lib::memmove<T>(dest, dest + 1, prev_size - position);
 
 				set(position, ch);
+			}
+
+			constexpr void insert(const T* data, const uint64 position) noexcept {
+				const uint64 prev_size = size();
+
+				if (position >= prev_size) {
+					append(data);
+					return;
+				}
+
+				const uint64 str_size = char_traits<T>::length(data);
+				const uint64 new_size = prev_size + str_size;
+				set_size(new_size);
+
+				T* dest = this->data() + position;
+				lib::memmove<T>(dest, dest + str_size, prev_size - position);
+
+				char_traits<T>::copy(data, dest, str_size);
+			}
+
+			constexpr void insert(const basic_string<T>& data, const uint64 position) noexcept {
+				const uint64 prev_size = size();
+
+				if (position >= prev_size) {
+					append(data);
+					return;
+				}
+
+				const uint64 str_size = data.size();
+				const uint64 new_size = prev_size + str_size;
+				set_size(new_size);
+
+				T* dest = this->data() + position;
+				lib::memmove<T>(dest, dest + str_size, prev_size - position);
+
+				char_traits<T>::copy(data.c_str(), dest, str_size);
 			}
 
 			[[nodiscard]] constexpr const T& operator[](uint64 position) const noexcept {
@@ -720,8 +756,8 @@
 			}
 
 			constexpr void append(const T* str) noexcept {
-				uint64 str_size = lib::char_traits<T>::length(str);
-				uint64 s = size();
+				const uint64 str_size = lib::char_traits<T>::length(str);
+				const uint64 s = size();
 				uint64 new_size = s + str_size;
 
 				if (from_stack() && new_size <= basic_stack_string<T>::buffer_size) {
@@ -735,8 +771,8 @@
 				}
 			}
 
-			constexpr void append(uint64 count, T ch) noexcept {
-				uint64 s = size();
+			constexpr void append(const uint64 count, T ch) noexcept {
+				const uint64 s = size();
 				uint64 new_size = s + count;
 
 				if (from_stack() && new_size <= basic_stack_string<T>::buffer_size) {
@@ -851,6 +887,21 @@
 
 			[[nodiscard]] constexpr basic_string<T> copy() const noexcept {
 				return basic_string<T>{ this->c_str(), this->size() };
+			}
+
+			constexpr void copy_assign(const basic_string<T>& other, const uint64 from, const uint64 to) noexcept {
+				#ifndef NDEBUG
+					if (from > to) [[unlikely]]
+						return; // error
+				#endif
+
+				const uint64 new_size = to - from;
+
+				set_size(new_size);
+
+				for (uint64 i = from, j = 0; i < to; ++i, ++j) {
+					this[j] = other[i];
+				}
 			}
 
 			constexpr void swap(basic_string<T>& other) noexcept {
