@@ -46,6 +46,16 @@
 					data[i] = 0;
 			}
 
+			constexpr void clear() {
+				for (uint64 i = 0; i < ByteSize; ++i)
+					data[i] = 0;
+		    }
+
+			constexpr bitlist& copy(bitlist& other) {
+		        for (uint64 i = 0; i < ByteSize; ++i)
+		        	other.data[i] = data[i];
+			}
+
 			constexpr void set(const uint64 index, const bool value) noexcept {
 				if (index < Size) {
 					const uint64 byteIndex = index / 8;
