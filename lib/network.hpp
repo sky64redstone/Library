@@ -5,7 +5,6 @@
 //
 // 1.0: namespace lib::packets
 // 1.0: class base_message<tag_>
-// 1.0: namespace lib::http
 // 1.0: class http_socket
 //
 
@@ -225,10 +224,6 @@
         class http_socket : public nocopy {
 
         };
-
-        namespace html {
-
-        }
     }
 
 #endif //NETWORK_HPP
