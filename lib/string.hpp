@@ -637,28 +637,24 @@
 			}
 
 			[[nodiscard]] constexpr uint64 find(const basic_string<T>& str) const noexcept {
-				if (this->size() < str.size())
-					return str.find(*this); // be careful with max_size() check if the are heap/stack diff
+				for (uint64 i = 0; i < size() - 1; ++i) { // loop through every char in this->data()
+					for (uint64 j = 0, x = i;;) { // loop through every char in str->data()
 
-				uint64 x = 0;
+						if (at(x) != str.at(j)) // check if the chars match
+							break; // if not try next offset of this->data()
 
-				for (uint64 i = 0; i < size() - 1; ++i) {
-					for (uint64 j = 0;; x = j + i) {
+						++j; // increase str->data() offset
+						++x; // increase this->data() offset
 
-						if (at(x) != str.at(j))
-							break;
+						if (j == str.size()) // if last char in str->data() is reached
+							return i; // return the found offset
 
-						++j;
-
-						if (j == str.size())
-							return i;
-
-						if (x < size())
-							return max_size();
+						if (x >= size()) // if last char in this->data() is reached
+							return max_size(); // not found
 					}
 				}
 
-				return max_size();
+				return max_size(); // not found
 			}
 
 			[[nodiscard]] constexpr uint64 reverse_find(T ch) const noexcept {
@@ -672,28 +668,24 @@
 			}
 
 			[[nodiscard]] constexpr uint64 reverse_find(const basic_string<T>& str) const noexcept {
-				if (this->size() < str.size())
-					return str.reverse_find(str); // be careful with max_size() check if the are heap/stack diff
+				for (uint64 i = size() - 1;; --i) { // loop through every char in this->data()
+					for (uint64 j = str.size() - 1, x = i;;) { // loop through every char in str->data()
 
-				uint64 x = 0;
+						if (at(x) != str.at(j)) // check if the chars match
+							break; // if not try next offset of this->data()
 
-				for (uint64 i = size() - 1;; --i) {
-					for (uint64 j = str.size();; x = i + j) {
+						--j; // decrease offset in str->data()
+						--x; // decrease offset in this->data()
 
-						if (at(x) != str.at(j))
-							break;
+						if (j == 0) // if the first char in str->data() is reached
+							return x; // return offset
 
-						--j;
-
-						if (j == 0)
-							return i;
-
-						if (x < size())
-							return max_size();
+						if (x == 0) // if the first char in this->data() is reached
+							return max_size(); // not found
 					}
 
-					if (i == 0)
-						return max_size();
+					if (i == 0) // if the first char in this->data() is reached
+						return max_size(); // not found
 				}
 			}
 
