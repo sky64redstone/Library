@@ -18,22 +18,16 @@
 #define unused(x) (void)(x)
 
 int main() {
+    lib::window win{};
+    win.create({ 100, 100 }, { 250, 250 });
 
-    constexpr lib::string str = "readonly";
-    constexpr lib::uint64 str_pos = str.reverse_find("only");
+    unused(win.set_title("test"));
 
-    unused(lib::cout << str_pos << lib::endl);
+    win.start_system_event_loop();
 
-    //lib::window win{};
-    //win.create({ 100, 100 }, { 250, 250 });
-
-    //unused(win.set_title("test"));
-
-    //win.start_system_event_loop();
-
-    //while (win.open()) {
-    //    win.handle_system_events();
-    //}
+    while (win.open()) {
+        win.handle_system_events();
+    }
 
     return 0;
 }
