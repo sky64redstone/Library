@@ -329,11 +329,11 @@
 		}
 
 		template <typename T>
-		constexpr void memswap(T* const first, T* const second) noexcept {
-			T temp{};
-			lib::memcpy<T>(first, &temp, 1);
-			lib::memcpy<T>(second, first, 1);
-			lib::memcpy<T>(&temp, second, 1);
+		constexpr void memswap(T* const first, T* const second, const uint64 count) noexcept {
+			T temp[count];
+			lib::memcpy<T>(first, temp, count);
+			lib::memcpy<T>(second, first, count);
+			lib::memcpy<T>(temp, second, count);
 		}
 
 		template <typename T>
