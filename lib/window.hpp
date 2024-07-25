@@ -61,6 +61,10 @@
                 return window_size;
             }
 
+            [[nodiscard]] const vec2i& get_pos() const noexcept {
+                return window_pos;
+            }
+
             [[nodiscard]] int32 get_mouse_wheel() const noexcept {
                 return mouse_wheel;
             }
@@ -218,6 +222,10 @@
 
             [[nodiscard]] const vec2i& window_size() const noexcept {
                 return data.get_size();
+            }
+
+            [[nodiscard]] const vec2i& window_pos() const noexcept {
+                return data.get_pos();
             }
 
             [[nodiscard]] int32 mouse_wheel() const noexcept {
