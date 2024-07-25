@@ -3,6 +3,8 @@ project(Library)
 
 set(CMAKE_CXX_STANDARD 23)
 
+link_libraries(X11)
+
 add_executable(Library main.cpp
         lib/types.hpp
         lib/vec.hpp
@@ -23,4 +25,5 @@ add_executable(Library main.cpp
         lib/image.hpp
         lib/process.hpp
         lib/global_error.hpp
-        lib/network.hpp)
+        lib/network.hpp
+        lib/window.hpp)
