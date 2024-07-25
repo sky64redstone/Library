@@ -136,51 +136,15 @@
 
         class window {
             #ifdef _WIN32
+                static ATOM win_atom;
                 HWND native_window = nullptr;
-                wchar_t* title;
+                TCHAR* title = nullptr;
 
-                static wchar_t* convert_str_to_wstr(char* str) {
-                    #ifdef __MINGW32__
-                        uint64 str_len = lstrlenA(str);
-                        wchar_t* buffer = new wchar_t[str_len + 1];
-                        mbstowcs(buffer, str, str_len);
-                        buffer[str_len] = L'\0';
-                    #else
-                        int str_len = MultiByteToWideChar(CP_UTF8, 0, str, -1, nullptr, 0);
-                        wchar_t* buffer = new wchar_t[str_len];
-                        MultiByteToWideChar(CP_UTF8, 0, str, -1, buffer, count);
-                    #endif
-                    return buffer;
-                }
+                static wchar_t* convert_str_to_wstr(char* str) noexcept;
 
-                static LRESULT CALLBACK global_window_event(HWND window, UINT msg, WPARAM w, LPARAM l) noexcept {
-                    // todo
-                }
+                static LRESULT CALLBACK global_window_event(HWND wnd, const UINT msg, const WPARAM w, const LPARAM l) noexcept;
 
-                LRESULT CALLBACK window_event(UINT msg, WPARAM w, LPARAM l) noexcept {
-                    switch (msg) {
-                        case WM_MOUSEMOVE: data.update_mouse(l & 0xFFFF, (l >> 16) & 0xFFFF); break;
-                        case WM_MOVE: data.update_window_pos(l & 0xFFFF, (l >> 16) & 0xFFFF); break;
-                        case WM_SIZE: data.update_window_size(l & 0xFFFF, (l >> 16) & 0xFFFF); break;
-                        case WM_MOUSEWHEEL: data.update_mouse_wheel(GET_WHEEL_DELTA_WPARAM(w)); break;
-                        case WM_MOUSELEAVE: data.update_mouse_focus(false); break;
-                        case WM_SETFOCUS: data.update_key_focus(true); break;
-                        case WM_KILLFOCUS: data.update_key_focus(false); break;
-                        case WM_SYSKEYDOWN: [[fallthrough]]
-                        case WM_KEYDOWN: data.update_key_state(w, true); break;
-                        case WM_SYSKEYUP: [[fallthrough]]
-                        case WM_KEYUP: data.update_key_state(w, false); break;
-                        case WM_LBUTTONDOWN: data.update_mouse_state(0, true); break;
-                        case WM_LBUTTONUP: data.update_mouse_state(0, false); break;
-                        case WM_RBUTTONDOWN: data.update_mouse_state(1, true); break;
-                        case WM_RBUTTONUP: data.update_mouse_state(1, false); break;
-                        case WM_MBUTTONDOWN: data.update_mouse_state(2, true); break;
-                        case WM_MBUTTONUP: data.update_mouse_state(2, false); break;
-                        case WM_CLOSE: terminate(); return 0;
-                        case WM_DESTROY: PostQuitMessage(0); DestroyWindow(native_window); return 0;
-                    }
-                    return DefWindowProc(native_window, msg, w, l);
-                }
+                LRESULT CALLBACK window_event(const UINT msg, const WPARAM w, const LPARAM l) noexcept;
             #elif defined(__linux__)
                 Display* display = nullptr;
                 Window window_root = 0;
@@ -204,7 +168,7 @@
             // Needs to be called in the same thread
             // where the create function was called.
             // And has only to be called once (before starting a game loop)
-            bool start_system_event_loop() noexcept;
+            static bool start_system_event_loop() noexcept;
 
             // Needs to be called every game tick
             // or every time you want to update sth
@@ -258,46 +222,119 @@
         };
 
         #ifdef _WIN32
+            inline wchar_t* window::convert_str_to_wstr(char* str) noexcept {
+                #ifdef __MINGW32__
+                    uint64 str_len = lstrlenA(str);
+                    auto* buffer = new wchar_t[str_len + 1];
+                    mbstowcs(buffer, str, str_len);
+                    buffer[str_len] = L'\0';
+                #else
+                    int str_len = MultiByteToWideChar(CP_UTF8, 0, str, -1, nullptr, 0);
+                    auto* buffer = new wchar_t[str_len];
+                    MultiByteToWideChar(CP_UTF8, 0, str, -1, buffer, count);
+                #endif
+                return buffer;
+            }
+
+            inline LRESULT CALLBACK window::global_window_event(HWND wnd, const UINT msg, const WPARAM w, const LPARAM l) noexcept {
+                window* wnd_ptr;
+
+                if (msg == WM_NCCREATE) {
+                    const auto* create = reinterpret_cast<CREATESTRUCT*>(l);
+
+                    wnd_ptr = static_cast<window*>(create->lpCreateParams);
+
+                    if (wnd_ptr) {
+                        SetWindowLongPtr(wnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(wnd_ptr));
+
+                        wnd_ptr->native_window = wnd;
+                    }
+                } else {
+                    wnd_ptr = reinterpret_cast<window*>(GetWindowLongPtr(wnd, GWLP_USERDATA));
+                }
+
+                if (wnd_ptr) {
+                    return wnd_ptr->window_event(msg, w, l);
+                }
+
+                return DefWindowProc(wnd, msg, w, l);
+            }
+
+            inline LRESULT CALLBACK window::window_event(const UINT msg, const WPARAM w, const LPARAM l) noexcept {
+                switch (msg) {
+                    case WM_MOUSEMOVE:      data.update_mouse(LOWORD(l), HIWORD(l)); return 0;
+                    case WM_MOVE:           data.update_window_pos(LOWORD(l), HIWORD(l)); return 0;
+                    case WM_SIZE:           data.update_window_size(LOWORD(l), HIWORD(l)); return 0;
+                    case WM_MOUSEWHEEL:     data.update_mouse_wheel(GET_WHEEL_DELTA_WPARAM(w)); return 0;
+                    case WM_MOUSELEAVE:     data.update_mouse_focus(false); return 0;
+                    case WM_SETFOCUS:       data.update_key_focus(true); return 0;
+                    case WM_KILLFOCUS:      data.update_key_focus(false); return 0;
+                    case WM_SYSKEYDOWN:
+                    case WM_KEYDOWN:        data.update_key_state(static_cast<int32>(w), true); return 0;
+                    case WM_SYSKEYUP:
+                    case WM_KEYUP:          data.update_key_state(static_cast<int32>(w), false); return 0;
+                    case WM_LBUTTONDOWN:    data.update_mouse_state(0, true); return 0;
+                    case WM_LBUTTONUP:      data.update_mouse_state(0, false); return 0;
+                    case WM_RBUTTONDOWN:    data.update_mouse_state(1, true); return 0;
+                    case WM_RBUTTONUP:      data.update_mouse_state(1, false); return 0;
+                    case WM_MBUTTONDOWN:    data.update_mouse_state(2, true); return 0;
+                    case WM_MBUTTONUP:      data.update_mouse_state(2, false); return 0;
+                    case WM_CLOSE:          terminate(); return 0;
+                    case WM_DESTROY:        PostQuitMessage(0); return 0;
+                    default: break;
+                }
+                return DefWindowProc(native_window, msg, w, l);
+            }
+
             inline bool window::cleanup() noexcept {
                 PostMessage(native_window, WM_DESTROY, 0, 0);
+
+                is_open = false;
+
                 return true;
             }
 
+            ATOM window::win_atom = 0;
+
             inline bool window::create(const vec2i& pos, const vec2i& size) noexcept {
-                WNDCLASS wclass{};
-                wclass.hIcon = LoadIcon(NULL, IDI_APPLICATION);
-                wclass.hCursor = LoadCursor(NULL, IDC_ARROW);
-                wclass.style = CS_HREDRAW | CS_VREDRAW;
-                wclass.hInstance = GetModuleHandle(nullptr);
-                wclass.lpfnWndProc = global_window_event;
-                wclass.cbClsExtra = 0;
-                wclass.cbWndExtra = 0;
-                wclass.lpszMenuName = nullptr;
-                wclass.hbrBackground = nullptr;
-                wclass.lpszClassName = TEXT("sky64redstone/window");
+                if (win_atom == 0) [[unlikely]] { // after the first time its not reachable
+                    WNDCLASS wclass{};
+                    wclass.hIcon = LoadIcon(nullptr, IDI_APPLICATION);
+                    wclass.hCursor = LoadCursor(nullptr, IDC_ARROW);
+                    wclass.style = CS_HREDRAW | CS_VREDRAW; // redraw on size/move
+                    wclass.hInstance = GetModuleHandle(nullptr);
+                    wclass.lpfnWndProc = global_window_event;
+                    wclass.cbClsExtra = 0;
+                    wclass.cbWndExtra = 0;
+                    wclass.lpszMenuName = nullptr;
+                    wclass.hbrBackground = reinterpret_cast<HBRUSH>(COLOR_WINDOW + 1);
+                    wclass.lpszClassName = TEXT("sky64redstone/window");
 
-                ATOM win_atom = RegisterClass(&wclass);
+                    win_atom = RegisterClass(&wclass);
+                }
 
-                DWORD exstyle = WS_EX_APPWINDOW | WS_EX_WINDOWEDGE;
-                DWORD style = WS_CAPTION | WS_SYSMENU | WS_VISIBLE | WS_THICKFRAME;
+                constexpr DWORD exstyle = WS_EX_APPWINDOW | WS_EX_WINDOWEDGE;
+                constexpr DWORD style = WS_TILEDWINDOW | WS_VISIBLE;
 
                 // calculate client size
                 RECT rect = { 0, 0, size.x, size.y };
                 AdjustWindowRectEx(&rect, style, FALSE, exstyle);
-                size.x = rect.right - rect.left;
-                size.y = rect.bottom - rect.top;
+                const int32 w = rect.right - rect.left;
+                const int32 h = rect.bottom - rect.top;
 
                 native_window = CreateWindowEx(
                     exstyle,
-                    (LPCTSTR)((LPCTSTR)(0) | win_atom),
+                    MAKEINTATOM(win_atom),
                     TEXT("github.com/sky64redstone"),
                     style,
                     pos.x, pos.y,
-                    size.x, size.y,
-                    NULL, NULL,
-                    wclass.hInstance,
+                    w, h,
+                    nullptr, nullptr,
+                    GetModuleHandle(nullptr),
                     this
                 );
+
+                is_open = true;
 
                 return true;
             }
