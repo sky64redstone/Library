@@ -13,19 +13,27 @@
 #include "lib/types.hpp"
 #include "lib/vec.hpp"
 #include "lib/vector.hpp"
+#include "lib/window.hpp"
 
 #define unused(x) (void)(x)
 
 int main() {
-    constexpr lib::mat2i test{};
-    auto temp = test.inverse();
 
     constexpr lib::string str = "readonly";
-    constexpr lib::uint64 str_pos = str.find("only");
-    constexpr lib::uint64 ch_pos = str.find('o');
+    constexpr lib::uint64 str_pos = str.reverse_find("only");
 
-    unused(lib::cout << "hi");
-    unused(lib::cout << str_pos << ", " << ch_pos << lib::endl);
+    unused(lib::cout << str_pos << lib::endl);
 
-    return (temp.m00 = 0);
+    //lib::window win{};
+    //win.create({ 100, 100 }, { 250, 250 });
+
+    //unused(win.set_title("test"));
+
+    //win.start_system_event_loop();
+
+    //while (win.open()) {
+    //    win.handle_system_events();
+    //}
+
+    return 0;
 }
