@@ -3,7 +3,7 @@ project(Library)
 
 set(CMAKE_CXX_STANDARD 23)
 
-link_libraries(X11)
+#link_libraries(X11)
 
 add_executable(Library main.cpp
         lib/types.hpp
