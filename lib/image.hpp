@@ -37,6 +37,14 @@
                 return out;
             }
 
+            // if this image was created with copy() then
+            // use this function to delete the array of the copy
+            constexpr void delete_copy() noexcept {
+                width = 0;
+                height = 0;
+                delete[] data;
+            }
+
             [[nodiscard]] constexpr basic_image<color> make_average() const noexcept {
                 return copy().average();
             }
