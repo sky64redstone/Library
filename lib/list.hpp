@@ -177,17 +177,17 @@
 
 			template <typename T_LIST>
 			friend const lib::ostream& operator<<(const lib::ostream& out, const lib::linked_list<T_LIST>& list) noexcept {
-				const T_LIST* value = nullptr;
+				const T_LIST* value;
 				uint64 ptr = 0;
-				out << "{ ";
+				(void)(out << "{ ");
 				while ((value = list.get(ptr)) != nullptr) {
 					if (ptr != 0) {
-						out << ", ";
+						(void)(out << ", ");
 					}
 					out << *value;
 					++ptr;
 				}
-				out << " }";
+				(void)(out << " }");
 				return out;
 			}
 		};
@@ -297,7 +297,6 @@
 				out->data = value;
 			}
 
-			// don't use a 0 for the index!!!
 			constexpr void reverse_set(const uint64 index, T value) noexcept {
 				if (last == nullptr) [[unlikely]]
 					return;
@@ -386,17 +385,17 @@
 
 			template <typename T_LIST>
 			friend const lib::ostream& operator<<(const lib::ostream& out, const lib::double_linked_list<T_LIST>& list) noexcept {
-				const T_LIST* value = nullptr;
+				const T_LIST* value;
 				uint64 ptr = 0;
-				out << "{ ";
+				(void)(out << "{ ");
 				while ((value = list.get(ptr)) != nullptr) {
 					if (ptr != 0) {
-						out << ", ";
+						(void)(out << ", ");
 					}
 					out << *value;
 					++ptr;
 				}
-				out << " }";
+				(void)(out << " }");
 				return out;
 			}
 		};
