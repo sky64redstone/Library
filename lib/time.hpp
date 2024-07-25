@@ -225,7 +225,7 @@
 				inline LARGE_INTEGER frequency{ .QuadPart = 0 };
 			}
 
-			[[nodiscard]] system_clock::value system_clock::now() noexcept {
+			[[nodiscard]] inline system_clock::value system_clock::now() noexcept {
 				FILETIME time{};
 				GetSystemTimePreciseAsFileTime(&time);
 				ULARGE_INTEGER out{};
@@ -234,7 +234,7 @@
 				return system_clock::value{ out.QuadPart };
 			}
 
-			[[nodiscard]] high_res_clock::value high_res_clock::now() noexcept {
+			[[nodiscard]] inline high_res_clock::value high_res_clock::now() noexcept {
 				if (windows::frequency.QuadPart == 0) [[unlikely]]
 					QueryPerformanceFrequency(&windows::frequency);
 
@@ -249,16 +249,16 @@
 
 				if (freq == MHz10) LIKELY_X86 {
 					constexpr int64 multiplier = high_res_clock::period::denominator;
-					return high_res_clock::value{ cntr * multiplier };
-				} else if (freq == MHz24) LIKELY_ARM {
+					return high_res_clock::value{ static_cast<unsigned long long>(cntr * multiplier) };
+				}
+				if (freq == MHz24) LIKELY_ARM {
 					const int64 whole = (cntr / MHz24) * high_res_clock::period::denominator;
 					const int64 part_ = (cntr % MHz24) * high_res_clock::period::denominator / MHz24;
-					return high_res_clock::value{ whole + part_ };
-				} else {
-					const int64 whole = (cntr / freq) * high_res_clock::period::denominator;
-					const int64 part_ = (cntr % freq) * high_res_clock::period::denominator / freq;
-					return high_res_clock::value{ whole + part_ };
+					return high_res_clock::value{ static_cast<unsigned long long>(whole + part_) };
 				}
+				const int64 whole = (cntr / freq) * high_res_clock::period::denominator;
+				const int64 part_ = (cntr % freq) * high_res_clock::period::denominator / freq;
+				return high_res_clock::value{ static_cast<unsigned long long>(whole + part_) };
 			}
 		}
 
