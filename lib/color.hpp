@@ -203,7 +203,7 @@
 			constexpr /*no explicit*/ color4(const lib::uint32 color_code) noexcept : data(color_code) {}
 			constexpr color4(const float r, const float g, const float b, const float a = 1.0f) noexcept
 				: r(static_cast<ubyte>(r * 255)), g(static_cast<ubyte>(g * 255)), b(static_cast<ubyte>(b * 255)), a(static_cast<ubyte>(a * 255)) {}
-			constexpr /*no explicit*/ color4(const color3& c, lib::ubyte a = 0xFF) noexcept : r(c.r), g(c.g), b(c.b), a(a) {}
+			constexpr /*no explicit*/ color4(const color3& c, const lib::ubyte a = 0xFF) noexcept : r(c.r), g(c.g), b(c.b), a(a) {}
 			constexpr color4(const color4& c) noexcept : r(c.r), g(c.g), b(c.b), a(c.a) {}
 			constexpr color4(color4&& c) noexcept : r(c.r), g(c.g), b(c.b), a(c.a) { c.r = 0; c.g = 0; c.b = 0; c.a = 0xFF; }
 
