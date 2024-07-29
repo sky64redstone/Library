@@ -178,6 +178,10 @@
 
             void terminate() noexcept { is_open = false; }
 
+            bool set_size(const vec2i& size) const noexcept;
+
+            bool set_pos(const vec2i& pos) const noexcept;
+
             // mouse & keyboard
 
             [[nodiscard]] const vec2i& mouse_pos() const noexcept {
@@ -297,7 +301,7 @@
             ATOM window::win_atom = 0;
 
             inline bool window::create(const vec2i& pos, const vec2i& size) noexcept {
-                if (win_atom == 0) [[unlikely]] { // after the first time its not reachable
+                if (win_atom == 0) [[unlikely]] { // after the first time it's not reachable
                     WNDCLASS wclass{};
                     wclass.hIcon = LoadIcon(nullptr, IDI_APPLICATION);
                     wclass.hCursor = LoadCursor(nullptr, IDC_ARROW);
@@ -359,6 +363,19 @@
             inline bool window::handle_system_events() noexcept {
                 return true;
             }
+
+            inline bool set_size(const vec2i& size) const noexcept {
+                constexpr UINT flags = SWP_NOMOVE | SWP_NOZORDER;
+                BOOL result = SetWindowPos(native_window, nullptr, 0, 0, size.x, size.y, flags);
+                return result != 0;
+            }
+
+            inline bool set_pos(const vec2i& pos) const noexcept {
+                constexpr UINT flags = SWP_NOSIZE | SWP_NOZORDER;
+                BOOL result = SetWindowPos(native_window, nullptr, pos.x, pos.y, 0, 0, flags);
+                return result != 0;
+            }
+
         #elif defined(__linux__)
             inline bool window::cleanup() noexcept {
                 XDestroyWindow(display, native_window);
@@ -454,6 +471,16 @@
                 }
 
                 return true;
+            }
+
+            inline bool window::set_size(const vec2i& size) const noexcept {
+                const int result = XResizeWindow(display, native_window, size.x, size.y);
+                return result != BadValue && result != BadWindow;
+            }
+
+            inline bool window::set_pos(const vec2i& pos) const noexcept {
+                const int result = XMoveWindow(display, native_window, pos.x, pos.y);
+                return result != BadWindow;
             }
         #endif
     }

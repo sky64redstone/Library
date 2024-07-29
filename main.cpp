@@ -23,7 +23,8 @@
 lib::window win{};
 
 void update() {
-    lib::cout << "entering update loop!\n";
+    unused(win.set_pos({ 0, 0 }));
+    unused(win.set_size({ 500, 500 }));
 
     while (win.open()) {
         win.handle_system_events();
@@ -35,13 +36,9 @@ void update() {
 int main() {
     win.create({ 100, 100 }, { 250, 250 });
 
-    lib::cout << "created!\n";
-
     std::thread thread{update};
 
     lib::window::start_system_event_loop();
-
-    lib::cout << "waiting for thread!\n";
 
     thread.join();
 
