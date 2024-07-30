@@ -15,26 +15,27 @@
 #include "lib/vec.hpp"
 #include "lib/vector.hpp"
 #include "lib/window.hpp"
+#include "lib/renderer.hpp"
 
 #include <thread>
 
 #define unused(x) (void)(x)
 
 lib::window win{};
+lib::renderer_opengl10 opengl{};
 
 void update() {
-    unused(win.set_pos({ 0, 0 }));
-    unused(win.set_size({ 500, 500 }));
-
     while (win.open()) {
         win.handle_system_events();
     }
 
+    opengl.destroy();
     win.cleanup();
 }
 
 int main() {
-    win.create({ 100, 100 }, { 250, 250 });
+    win.create({ 100, 100 }, { 250, 250 }, true);
+    opengl.create(win, true);
 
     std::thread thread{update};
 
