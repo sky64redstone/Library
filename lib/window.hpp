@@ -6,6 +6,7 @@
 // 0.1: support for x11 (e.g. linux)
 // 0.2: support for win32 (windows)
 // 0.3: support for opengl 1.0 for x11
+// 0.4: support for opengl 1.0 for win32
 //
 
 //
