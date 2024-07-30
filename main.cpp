@@ -25,21 +25,15 @@ lib::window win{};
 lib::renderer_opengl10 opengl{};
 
 void update() {
+    opengl.update_viewport({ 0, 0 }, win.window_size());
 
     while (win.open()) {
         win.handle_system_events();
 
-        opengl.update_viewport({ 0, 0 }, win.window_size());
-        opengl.clear_buffer(lib::color4{ 0xFF000000 }, true);
+        glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT); // still not working :(
 
-        opengl.prepare_drawing();
-
-        opengl.draw_layer_quad( // not yet working :(
-            { 0.f, 0.f },
-            { 5.f, 5.f},
-            lib::color4{ 0xFFFFFFFF } // white: 0xFFFFFFFF
-        );
-        opengl.display_frame();
+        opengl.swap_buffers();
     }
 
     opengl.destroy();

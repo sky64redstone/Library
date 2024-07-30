@@ -42,7 +42,7 @@
 
             virtual bool create(window& wnd, bool vsync) noexcept = 0;
             virtual bool destroy() noexcept = 0;
-            virtual bool display_frame() noexcept = 0;
+            virtual bool swap_buffers() noexcept = 0;
         };
 
         // OpenGL 1.0 renderer
@@ -68,7 +68,7 @@
             bool create(window& wnd, bool vsync) noexcept override;
             bool destroy() noexcept override;
 
-            bool display_frame() noexcept override;
+            bool swap_buffers() noexcept override;
             void prepare_drawing() noexcept;
             void update_viewport(const vec2i& pos, const vec2i& size) noexcept;
 
@@ -154,7 +154,7 @@
                 return result == TRUE;
             }
 
-            inline bool renderer_opengl10::display_frame() noexcept {
+            inline bool renderer_opengl10::swap_buffers() noexcept {
                 BOOL result = SwapBuffers(device_context);
                 if (vsync) {
                     if (result != TRUE) [[unlikely]]
@@ -205,7 +205,7 @@
                 return true;
             }
 
-            inline bool renderer_opengl10::display_frame() noexcept {
+            inline bool renderer_opengl10::swap_buffers() noexcept {
                 glXSwapBuffers(display, *native_window);
                 return true;
             }
