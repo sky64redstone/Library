@@ -33,12 +33,16 @@
     #endif
 
     #include "window.hpp"
+    #include "color.hpp"
 
     namespace lib {
         class renderer {
         public:
+            virtual ~renderer() = default;
+
             virtual bool create(window& wnd, bool vsync) noexcept = 0;
             virtual bool destroy() noexcept = 0;
+            virtual bool display_frame() noexcept = 0;
         };
 
         // OpenGL 1.0 renderer
@@ -59,13 +63,54 @@
             bool vsync : 1 = false;
 
         public:
-            ~renderer_opengl10() noexcept;
+            ~renderer_opengl10() noexcept override;
 
             bool create(window& wnd, bool vsync) noexcept override;
             bool destroy() noexcept override;
+
+            bool display_frame() noexcept override;
+            void prepare_drawing() noexcept;
+            void update_viewport(const vec2i& pos, const vec2i& size) noexcept;
+
+            void clear_buffer(const color4& color, bool depth) noexcept;
+            void draw_layer_quad(const vec2f& offset, const vec2f& scale, const color4& color) noexcept;
         };
 
         opengl_swap_interval renderer_opengl10::swap_interval = nullptr;
+
+        inline void renderer_opengl10::prepare_drawing() noexcept {
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        }
+
+        inline void renderer_opengl10::update_viewport(const vec2i &pos, const vec2i &size) noexcept {
+            glViewport(pos.x, pos.y, size.x, size.y);
+        }
+
+        inline void renderer_opengl10::clear_buffer(const color4& color, const bool depth) noexcept {
+            glClearColor(color.float_r(), color.float_g(), color.float_b(), color.float_a());
+            glClear(GL_COLOR_BUFFER_BIT | (depth ? GL_DEPTH_BUFFER_BIT : 0));
+        }
+
+        inline void renderer_opengl10::draw_layer_quad(const vec2f& offset, const vec2f& scale, const color4& color) noexcept {
+            glBegin(GL_QUADS);
+
+            glColor4ub(color.r, color.g, color.b, color.a);
+
+            glTexCoord2f(offset.x, scale.y + offset.y);
+            glVertex3f(-1.f, -1.f, 0.f);
+
+            glTexCoord2f(offset.x, offset.y);
+            glVertex3f(-1.f, 1.f, 0.f);
+
+            glTexCoord2f(scale.x + offset.x, offset.y);
+            glVertex3f(1.f, 1.f, 0.f);
+
+            glTexCoord2f(scale.x + offset.x, scale.y + offset.y);
+            glVertex3f(1.f, -1.f, 0.f);
+
+            glEnd();
+        }
 
         #ifdef _WIN32
             inline renderer_opengl10::~renderer_opengl10() noexcept {
@@ -108,6 +153,17 @@
                 BOOL result = wglDeleteContext(render_context)
                 return result == TRUE;
             }
+
+            inline bool renderer_opengl10::display_frame() noexcept {
+                BOOL result = SwapBuffers(device_context);
+                if (vsync) {
+                    if (result != TRUE) [[unlikely]]
+                        return false;
+
+                    return DwmFlush() == S_OK;
+                }
+                return result == TRUE;
+            }
         #elif defined(__linux__)
             inline renderer_opengl10::~renderer_opengl10() noexcept {
                 destroy();
@@ -148,6 +204,12 @@
                 glXDestroyContext(display, device_context);
                 return true;
             }
+
+            inline bool renderer_opengl10::display_frame() noexcept {
+                glXSwapBuffers(display, *native_window);
+                return true;
+            }
+
         #endif
     }
 
