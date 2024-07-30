@@ -5,6 +5,12 @@
 //
 // 0.1: support for x11 (e.g. linux)
 // 0.2: support for win32 (windows)
+// 0.3: support for opengl 1.0 for x11
+//
+
+//
+// vulkan support:
+// https://registry.khronos.org/vulkan/specs/1.0-wsi_extensions/html/vkspec.html#platformCreateSurface_xlib
 //
 
 #ifndef WINDOW_HPP
@@ -21,6 +27,10 @@
     #elif defined(__linux__)
         #include <X11/X.h>
         #include <X11/Xlib.h>
+        #include <X11/Xutil.h>
+
+        #include <GL/gl.h>
+        #include <GL/glx.h>
     #endif
 
     #include "vec.hpp"
@@ -151,16 +161,18 @@
                 Window native_window = 0;
                 Colormap colormap = 0;
                 XSetWindowAttributes attributes{};
+                XVisualInfo* visual_info = nullptr;
             #endif
             window_data data;
             bool is_open : 1 = false;
+            bool opengl : 1 = false;
 
         public:
             // Destroys the window and frees up resources
             bool cleanup() noexcept;
 
             // Creates the window at pos with the Size: size
-            bool create(const vec2i& pos, const vec2i& size) noexcept;
+            bool create(const vec2i& pos, const vec2i& size, bool opengl = false) noexcept;
 
             // Sets the title-bar-text of the window
             bool set_title(const char* title) const noexcept;
@@ -181,6 +193,17 @@
             bool set_size(const vec2i& size) const noexcept;
 
             bool set_pos(const vec2i& pos) const noexcept;
+
+            [[nodiscard]] bool has_opengl() const noexcept { return opengl; }
+
+            #ifdef _WIN32
+                [[nodiscard]] HWND& native() noexcept { reutrn native_window; }
+            #elif defined(__linux__)
+                [[nodiscard]] Window& native() noexcept { return native_window; }
+                [[nodiscard]] Window& native_root() noexcept { return window_root; }
+                [[nodiscard]] Display* native_display() const noexcept { return display; }
+                [[nodiscard]] XVisualInfo* native_visual_info() const noexcept { return visual_info; }
+            #endif
 
             // mouse & keyboard
 
@@ -339,6 +362,7 @@
                 );
 
                 is_open = true;
+                this->opengl = opengl;
 
                 return true;
             }
@@ -364,13 +388,13 @@
                 return true;
             }
 
-            inline bool set_size(const vec2i& size) const noexcept {
+            inline bool window::set_size(const vec2i& size) const noexcept {
                 constexpr UINT flags = SWP_NOMOVE | SWP_NOZORDER;
                 BOOL result = SetWindowPos(native_window, nullptr, 0, 0, size.x, size.y, flags);
                 return result != 0;
             }
 
-            inline bool set_pos(const vec2i& pos) const noexcept {
+            inline bool window::set_pos(const vec2i& pos) const noexcept {
                 constexpr UINT flags = SWP_NOSIZE | SWP_NOZORDER;
                 BOOL result = SetWindowPos(native_window, nullptr, pos.x, pos.y, 0, 0, flags);
                 return result != 0;
@@ -385,15 +409,34 @@
                 return true;
             }
 
-            inline bool window::create(const vec2i& pos, const vec2i& size) noexcept {
+            inline bool window::create(const vec2i& pos, const vec2i& size, const bool opengl) noexcept {
                 XInitThreads();
 
                 display = XOpenDisplay(nullptr);
                 window_root = DefaultRootWindow(display);
+
+                if (opengl) {
+                    GLint gl_attr[] = { GLX_RGBA, GLX_DEPTH_SIZE, 24, GLX_DOUBLEBUFFER, None };
+                    visual_info = glXChooseVisual(display, 0, gl_attr);
+                    colormap = XCreateColormap(display, window_root, visual_info->visual, AllocNone);
+                    attributes.colormap = colormap;
+                }
+
                 attributes.event_mask = ExposureMask | KeyPressMask | KeyReleaseMask |
                     ButtonPressMask | ButtonReleaseMask | PointerMotionMask | FocusChangeMask | StructureNotifyMask;
 
-                native_window = XCreateWindow(display, window_root, pos.x, pos.y, size.x, size.y, 0, 0, InputOutput, nullptr, CWColormap | CWEventMask, &attributes);
+                native_window = XCreateWindow(
+                    display,
+                    window_root,
+                    pos.x, pos.y,
+                    size.x, size.y,
+                    0, // border width
+                    opengl ? visual_info->depth : 0,
+                    InputOutput,
+                    opengl ? visual_info->visual : nullptr,
+                    CWColormap | CWEventMask,
+                    &attributes
+                );
 
                 Atom wmDelete = XInternAtom(display, "WM_DELETE_WINDOW", true);
                 XSetWMProtocols(display, native_window, &wmDelete, 1);
@@ -402,6 +445,7 @@
                 XStoreName(display, native_window, "github.com/sky64redstone");
 
                 is_open = true;
+                this->opengl = opengl;
 
                 return true;
             }
@@ -482,6 +526,7 @@
                 const int result = XMoveWindow(display, native_window, pos.x, pos.y);
                 return result != BadWindow;
             }
+
         #endif
     }
 
