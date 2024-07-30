@@ -184,6 +184,18 @@
 				b = b >= 128 ? 0xFF : 0;
 				return *this;
 			}
+
+			[[nodiscard]] constexpr float float_r() const noexcept {
+				return static_cast<float>(r) / 255.f;
+			}
+
+			[[nodiscard]] constexpr float float_g() const noexcept {
+				return static_cast<float>(g) / 255.f;
+			}
+
+			[[nodiscard]] constexpr float float_b() const noexcept {
+				return static_cast<float>(b) / 255.f;
+			}
 		};
 		static_assert(sizeof(color3) == (sizeof(lib::ubyte) * 3));
 
@@ -388,6 +400,22 @@
 				g = g >= 128 ? 0xFF : 0;
 				b = b >= 128 ? 0xFF : 0;
 				return *this;
+			}
+
+			[[nodiscard]] constexpr float float_r() const noexcept {
+				return static_cast<float>(r) / 255.f;
+			}
+
+			[[nodiscard]] constexpr float float_g() const noexcept {
+				return static_cast<float>(g) / 255.f;
+			}
+
+			[[nodiscard]] constexpr float float_b() const noexcept {
+				return static_cast<float>(b) / 255.f;
+			}
+
+			[[nodiscard]] constexpr float float_a() const noexcept {
+				return static_cast<float>(a) / 255.f;
 			}
 		};
 		static_assert(sizeof(color4) == (sizeof(lib::ubyte) * 4) && sizeof(color4) == sizeof(lib::uint32));
