@@ -25,15 +25,31 @@ lib::window win{};
 lib::renderer_opengl10 opengl{};
 
 void update() {
+    if (opengl.create(win, true) == false) return;
     opengl.update_viewport({ 0, 0 }, win.window_size());
 
     while (win.open()) {
         win.handle_system_events();
 
-        glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT); // still not working :(
+        glClearColor(0.9, 0.7, 0.0, 1.0);
+        glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
-        opengl.swap_buffers();
+        constexpr float Offset = 0.9;
+
+        glBegin(GL_TRIANGLES);
+
+        glColor3f(1.0, 0.0, 0.0);
+        glVertex2f(0, Offset);
+
+        glColor3f(0.0, 1.0, 0.0);
+        glVertex2f(Offset, -Offset);
+
+        glColor3f(0.0, 0.0, 1.0);
+        glVertex2f(-Offset, -Offset);
+
+        glEnd();
+
+        glXSwapBuffers(win.native_display(), win.native());
     }
 
     opengl.destroy();
@@ -41,8 +57,8 @@ void update() {
 }
 
 int main() {
-    win.create({ 100, 100 }, { 250, 250 }, true);
-    opengl.create(win, true);
+    if (win.create({ 100, 100 }, { 250, 250 }, true) == false)
+        return -1;
 
     std::thread thread{update};
 

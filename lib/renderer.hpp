@@ -40,6 +40,7 @@
         public:
             virtual ~renderer() = default;
 
+            // create the renderer in the same thread as you render the scene
             virtual bool create(window& wnd, bool vsync) noexcept = 0;
             virtual bool destroy() noexcept = 0;
             virtual bool swap_buffers() noexcept = 0;
@@ -179,11 +180,8 @@
                 visual_info = wnd.native_visual_info();
 
                 device_context = glXCreateContext(display, visual_info, nullptr, GL_TRUE);
+                if (device_context == nullptr) return false;
                 glXMakeCurrent(display, *native_window, device_context);
-
-                XWindowAttributes attr;
-                XGetWindowAttributes(display, *native_window, &attr);
-                glViewport(0, 0, attr.width, attr.height);
 
                 if (swap_interval == nullptr && !vsync) {
                     // for disabling vsync, you need to specify the swap_interval function
@@ -194,8 +192,8 @@
                     swap_interval(display, *native_window, 0);
                 }
 
-                glEnable(GL_TEXTURE_2D);
-                glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
+                //glEnable(GL_TEXTURE_2D);
+                //glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
 
                 return true;
             }
