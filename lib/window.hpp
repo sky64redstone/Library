@@ -160,7 +160,6 @@
                 Display* display = nullptr;
                 Window window_root = 0;
                 Window native_window = 0;
-                Colormap colormap = 0;
                 XSetWindowAttributes attributes{};
                 XVisualInfo* visual_info = nullptr;
             #endif
@@ -410,17 +409,21 @@
                 return true;
             }
 
-            inline bool window::create(const vec2i& pos, const vec2i& size, const bool opengl) noexcept {
+            inline bool window::create(const vec2i& pos, const vec2i& size, bool opengl) noexcept {
                 XInitThreads();
 
                 display = XOpenDisplay(nullptr);
                 window_root = DefaultRootWindow(display);
 
+                if (glXQueryExtension(display, nullptr, nullptr) != True) [[unlikely]] {
+                    opengl = false; // start window without opengl
+                }
+
                 if (opengl) {
                     GLint gl_attr[] = { GLX_RGBA, GLX_DEPTH_SIZE, 24, GLX_DOUBLEBUFFER, None };
-                    visual_info = glXChooseVisual(display, 0, gl_attr);
-                    colormap = XCreateColormap(display, window_root, visual_info->visual, AllocNone);
-                    attributes.colormap = colormap;
+                    const int screen = XDefaultScreen(display);
+                    visual_info = glXChooseVisual(display, screen, gl_attr);
+                    attributes.colormap = XCreateColormap(display, window_root, visual_info->visual, AllocNone);
                 }
 
                 attributes.event_mask = ExposureMask | KeyPressMask | KeyReleaseMask |
