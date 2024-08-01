@@ -32,6 +32,7 @@
         }
     #endif
 
+    #include "types.hpp"
     #include "window.hpp"
     #include "color.hpp"
 
@@ -44,6 +45,8 @@
             virtual bool create(window& wnd, bool vsync) noexcept = 0;
             virtual bool destroy() noexcept = 0;
             virtual bool swap_buffers() noexcept = 0;
+            virtual void prepare_drawing() noexcept = 0;
+            virtual void update_viewport(const vec2i& pos, const vec2i& size) noexcept = 0;
         };
 
         // OpenGL 1.0 renderer
@@ -70,12 +73,23 @@
             bool destroy() noexcept override;
 
             bool swap_buffers() noexcept override;
-            void prepare_drawing() noexcept;
-            void update_viewport(const vec2i& pos, const vec2i& size) noexcept;
+            void prepare_drawing() noexcept override;
+            void update_viewport(const vec2i& pos, const vec2i& size) noexcept override;
 
             void clear_buffer(const color4& color, bool depth) noexcept;
             void draw_layer_quad(const vec2f& offset, const vec2f& scale, const color4& color) noexcept;
         };
+
+        template <typename renderer_>
+        constexpr bool is_renderer = is_any_of_type<renderer_, renderer, renderer_opengl10>;
+
+        template <typename renderer_>
+        constexpr bool is_opengl_renderer = is_any_of_type<renderer_, renderer_opengl10>;
+
+        template <typename renderer_>
+        constexpr bool is_opengl10_renderer = is_same_type<renderer_, renderer_opengl10>;
+
+        // Implementations
 
         opengl_swap_interval renderer_opengl10::swap_interval = nullptr;
 
