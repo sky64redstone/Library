@@ -406,6 +406,8 @@
 
                 is_open = false;
 
+                XCloseDisplay(display);
+
                 return true;
             }
 
@@ -451,7 +453,7 @@
                 is_open = true;
                 this->opengl = opengl;
 
-                return true;
+                return native_window != None;
             }
 
             inline bool window::set_title(const char* title) const noexcept {

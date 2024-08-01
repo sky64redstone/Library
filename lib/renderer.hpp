@@ -206,13 +206,14 @@
                     swap_interval(display, *native_window, 0);
                 }
 
-                //glEnable(GL_TEXTURE_2D);
-                //glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
+                glEnable(GL_TEXTURE_2D);
+                glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
 
                 return true;
             }
 
             inline bool renderer_opengl10::destroy() noexcept {
+                glXMakeCurrent(display, None, nullptr);
                 glXDestroyContext(display, device_context);
                 return true;
             }

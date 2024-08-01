@@ -26,10 +26,10 @@ lib::renderer_opengl10 opengl{};
 
 void update() {
     if (opengl.create(win, true) == false) return;
-    opengl.update_viewport({ 0, 0 }, win.window_size());
 
     while (win.open()) {
         win.handle_system_events();
+        opengl.update_viewport({ 0, 0 }, win.window_size());
 
         glClearColor(0.9, 0.7, 0.0, 1.0);
         glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
@@ -49,7 +49,7 @@ void update() {
 
         glEnd();
 
-        glXSwapBuffers(win.native_display(), win.native());
+        opengl.swap_buffers();
     }
 
     opengl.destroy();
