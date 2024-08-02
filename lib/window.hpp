@@ -180,11 +180,7 @@
             // Needs to be called in the same thread
             // where the create function was called.
             // And has only to be called once (before starting a game loop)
-            static bool start_system_event_loop() noexcept;
-
-            // Needs to be called every game tick
-            // or every time you want to update sth
-            bool handle_system_events() noexcept;
+            bool start_system_event_loop() noexcept;
 
             [[nodiscard]] bool open() const noexcept { return is_open; }
 
@@ -323,12 +319,12 @@
 
             ATOM window::win_atom = 0;
 
-            inline bool window::create(const vec2i& pos, const vec2i& size) noexcept {
+            inline bool window::create(const vec2i& pos, const vec2i& size, bool opengl) noexcept {
                 if (win_atom == 0) [[unlikely]] { // after the first time it's not reachable
                     WNDCLASS wclass{};
                     wclass.hIcon = LoadIcon(nullptr, IDI_APPLICATION);
                     wclass.hCursor = LoadCursor(nullptr, IDC_ARROW);
-                    wclass.style = CS_HREDRAW | CS_VREDRAW; // redraw on size/move
+                    wclass.style = CS_HREDRAW | CS_VREDRAW | CS_OWNDC; // redraw on size/move + own dc for opengl
                     wclass.hInstance = GetModuleHandle(nullptr);
                     wclass.lpfnWndProc = global_window_event;
                     wclass.cbClsExtra = 0;
@@ -381,10 +377,6 @@
                     TranslateMessage(&msg);
                     DispatchMessage(&msg);
                 }
-                return true;
-            }
-
-            inline bool window::handle_system_events() noexcept {
                 return true;
             }
 
@@ -462,64 +454,62 @@
             }
 
             inline bool window::start_system_event_loop() noexcept {
-                return true;
-            }
+                while (open()) {
 
-            inline bool window::handle_system_events() noexcept {
-                XEvent event;
+                    XEvent event;
 
-                while (XPending(display)) {
-                    XNextEvent(display, &event);
+                    while (XPending(display)) {
+                        XNextEvent(display, &event);
 
-                    switch (event.type) {
-                    case Expose: {
-                        XWindowAttributes attr;
-                        XGetWindowAttributes(display, native_window, &attr);
-                        data.update_window_size(attr.width, attr.height);
-                        break;
-                    }
-                    case ConfigureNotify: {
-                        data.update_window_size(event.xconfigure.width, event.xconfigure.height);
-                        break;
-                    }
-                    case KeyPress:
-                    case KeyRelease: {
-                        const KeySym sym = XLookupKeysym(&event.xkey, 0);
-                        data.update_key_state(static_cast<int32>(sym), event.type == KeyPress);
-                        break;
-                    }
-                    case ButtonPress:
-                    case ButtonRelease: {
-                        switch (event.xbutton.button) {
-                            case 1: { data.update_mouse_state(0, event.type == ButtonPress); break; }
-                            case 2: { data.update_mouse_state(1, event.type == ButtonPress); break; }
-                            case 3: { data.update_mouse_state(2, event.type == ButtonPress); break; }
-                            case 4: { data.update_mouse_wheel(120); break; }
-                            case 5: { data.update_mouse_wheel(-120); break; }
-                            default: break;
+                        switch (event.type) {
+                        case Expose: {
+                            XWindowAttributes attr;
+                            XGetWindowAttributes(display, native_window, &attr);
+                            data.update_window_size(attr.width, attr.height);
+                            break;
+                        }
+                        case ConfigureNotify: {
+                            data.update_window_size(event.xconfigure.width, event.xconfigure.height);
+                            break;
+                        }
+                        case KeyPress:
+                        case KeyRelease: {
+                            const KeySym sym = XLookupKeysym(&event.xkey, 0);
+                            data.update_key_state(static_cast<int32>(sym), event.type == KeyPress);
+                            break;
+                        }
+                        case ButtonPress:
+                        case ButtonRelease: {
+                            switch (event.xbutton.button) {
+                                case 1: { data.update_mouse_state(0, event.type == ButtonPress); break; }
+                                case 2: { data.update_mouse_state(1, event.type == ButtonPress); break; }
+                                case 3: { data.update_mouse_state(2, event.type == ButtonPress); break; }
+                                case 4: { data.update_mouse_wheel(120); break; }
+                                case 5: { data.update_mouse_wheel(-120); break; }
+                                default: break;
+                            }
+                        }
+                        case MotionNotify: {
+                            data.update_mouse(event.xmotion.x, event.xmotion.y);
+                            break;
+                        }
+                        case FocusIn:
+                        case FocusOut: {
+                            data.update_key_focus(event.type == FocusIn);
+                            break;
+                        }
+                        case EnterNotify:
+                        case LeaveNotify: {
+                            data.update_mouse_focus(event.type == EnterNotify);
+                            break;
+                        }
+                        case ClientMessage: {
+                            this->terminate();
+                        }
+                        default: break;
                         }
                     }
-                    case MotionNotify: {
-                        data.update_mouse(event.xmotion.x, event.xmotion.y);
-                        break;
-                    }
-                    case FocusIn:
-                    case FocusOut: {
-                        data.update_key_focus(event.type == FocusIn);
-                        break;
-                    }
-                    case EnterNotify:
-                    case LeaveNotify: {
-                        data.update_mouse_focus(event.type == EnterNotify);
-                        break;
-                    }
-                    case ClientMessage: {
-                        this->terminate();
-                    }
-                    default: break;
-                    }
                 }
-
                 return true;
             }
 

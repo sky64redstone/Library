@@ -24,15 +24,13 @@
 lib::window win{};
 lib::renderer_opengl10 opengl{};
 
-void update() {
-    if (opengl.create(win, true) == false) return;
+void update() noexcept {
+    opengl.create(win, true);
 
     while (win.open()) {
-        win.handle_system_events();
         opengl.update_viewport({ 0, 0 }, win.window_size());
 
-        glClearColor(0.9, 0.7, 0.0, 1.0);
-        glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+        opengl.clear_buffer({ 255, 255, 255 }, true);
 
         constexpr float Offset = 0.9;
 
@@ -53,18 +51,16 @@ void update() {
     }
 
     opengl.destroy();
-    win.cleanup();
 }
 
-int main() {
-    if (win.create({ 100, 100 }, { 250, 250 }, true) == false)
-        return -1;
+int main() noexcept {
+    win.create({ 0, 0 }, { 500, 300 }, true);
 
-    std::thread thread{update};
+    std::thread t(update);
 
-    lib::window::start_system_event_loop();
+    win.start_system_event_loop();
 
-    thread.join();
+    t.join();
 
     return 0;
 }
