@@ -34,18 +34,15 @@ void update() noexcept {
 
         constexpr float Offset = 0.9;
 
-        glBegin(GL_TRIANGLES);
+        opengl.begin_triangles();
 
-        glColor3f(1.0, 0.0, 0.0);
-        glVertex2f(0, Offset);
+        opengl.draw_triangle(
+            { 0, Offset, 1 }, { 255, 0, 0 },
+            { Offset, -Offset, 1 }, { 0, 255, 0 },
+            {-Offset, -Offset, 1 }, { 0, 0, 255 }
+        );
 
-        glColor3f(0.0, 1.0, 0.0);
-        glVertex2f(Offset, -Offset);
-
-        glColor3f(0.0, 0.0, 1.0);
-        glVertex2f(-Offset, -Offset);
-
-        glEnd();
+        opengl.end_drawing();
 
         opengl.swap_buffers();
     }

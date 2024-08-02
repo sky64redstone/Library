@@ -45,7 +45,6 @@
             virtual bool create(window& wnd, bool vsync) noexcept = 0;
             virtual bool destroy() noexcept = 0;
             virtual bool swap_buffers() noexcept = 0;
-            virtual void prepare_drawing() noexcept = 0;
             virtual void update_viewport(const vec2i& pos, const vec2i& size) noexcept = 0;
         };
 
@@ -71,12 +70,18 @@
             bool destroy() noexcept override;
 
             bool swap_buffers() noexcept override;
-            void prepare_drawing() noexcept override;
             void update_viewport(const vec2i& pos, const vec2i& size) noexcept override;
             void set_swap_interval(opengl_swap_interval swap_interval) noexcept;
 
-            void clear_buffer(const color4& color, bool depth) noexcept;
-            void draw_layer_quad(const vec2f& offset, const vec2f& scale, const color4& color) noexcept;
+            void clear_buffer(const color4& color, bool depth) const noexcept;
+
+            void end_drawing() const noexcept; // call after every begin_...() function
+
+            // draw triangles
+
+            // needs a end_drawing() call
+            void begin_triangles() const noexcept;
+            void draw_triangle(const vec3f& pos1, const color4& color1, const vec3f& pos2, const color4& color2, const vec3f& pos3, const color4& color3) const noexcept;
         };
 
         template <typename renderer_>
@@ -90,42 +95,36 @@
 
         // Implementations
 
-        inline void renderer_opengl10::prepare_drawing() noexcept {
-            glEnable(GL_BLEND);
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        }
-
         inline void renderer_opengl10::update_viewport(const vec2i &pos, const vec2i &size) noexcept {
             glViewport(pos.x, pos.y, size.x, size.y);
         }
 
-        inline void renderer_opengl10::set_swap_interval(const opengl_swap_interval swap_interval) noexcept {
+        inline void renderer_opengl10::set_swap_interval(opengl_swap_interval swap_interval) noexcept {
             this->swap_interval = swap_interval;
         }
 
-        inline void renderer_opengl10::clear_buffer(const color4& color, const bool depth) noexcept {
+        inline void renderer_opengl10::clear_buffer(const color4& color, const bool depth) const noexcept {
             glClearColor(color.float_r(), color.float_g(), color.float_b(), color.float_a());
             glClear(GL_COLOR_BUFFER_BIT | (depth ? GL_DEPTH_BUFFER_BIT : 0));
         }
 
-        inline void renderer_opengl10::draw_layer_quad(const vec2f& offset, const vec2f& scale, const color4& color) noexcept {
-            glBegin(GL_QUADS);
-
-            glColor4ub(color.r, color.g, color.b, color.a);
-
-            glTexCoord2f(offset.x, scale.y + offset.y);
-            glVertex3f(-1.f, -1.f, 0.f);
-
-            glTexCoord2f(offset.x, offset.y);
-            glVertex3f(-1.f, 1.f, 0.f);
-
-            glTexCoord2f(scale.x + offset.x, offset.y);
-            glVertex3f(1.f, 1.f, 0.f);
-
-            glTexCoord2f(scale.x + offset.x, scale.y + offset.y);
-            glVertex3f(1.f, -1.f, 0.f);
-
+        inline void renderer_opengl10::end_drawing() const noexcept {
             glEnd();
+        }
+
+        inline void renderer_opengl10::begin_triangles() const noexcept {
+            glBegin(GL_TRIANGLES);
+        }
+            
+        inline void renderer_opengl10::draw_triangle(const vec3f& pos1, const color4& color1, const vec3f& pos2, const color4& color2, const vec3f& pos3, const color4& color3) const noexcept {
+            glColor4f(color1.float_r(), color1.float_g(), color1.float_b(), color1.float_a());
+            glVertex3f(pos1.x, pos1.y, pos1.z);
+
+            glColor4f(color2.float_r(), color2.float_g(), color2.float_b(), color2.float_a());
+            glVertex3f(pos2.x, pos2.y, pos2.z);
+
+            glColor4f(color3.float_r(), color3.float_g(), color3.float_b(), color3.float_a());
+            glVertex3f(pos3.x, pos3.y, pos3.z);
         }
 
         #ifdef _WIN32
@@ -138,29 +137,32 @@
                     return false;
 
                 device_context = GetDC(wnd.native());
-                PIXELFORMATDESCRIPTOR pfd = {
+                constexpr PIXELFORMATDESCRIPTOR pfd = {
                     sizeof(PIXELFORMATDESCRIPTOR), 1,
                     PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER,
                     PFD_TYPE_RGBA, 32, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                     PFD_MAIN_PLANE, 0, 0, 0, 0
                 };
 
-                int pf = 0;
-                if (!(pf = ChoosePixelFormat(device_context, &pfd)))
+                int pf;
+                if (!((pf = ChoosePixelFormat(device_context, &pfd))))
                     return false;
                 SetPixelFormat(device_context, pf, &pfd);
 
-                if (!(render_context = wglCreateContext(device_context)))
+                if (!((render_context = wglCreateContext(device_context))))
                     return false;
                 wglMakeCurrent(device_context, render_context);
 
-                swap_interval = (opengl_swap_interval)wglGetProcAddress("wglSwapIntervalEXT");
+                swap_interval = reinterpret_cast<opengl_swap_interval>(wglGetProcAddress("wglSwapIntervalEXT"));
                 if (swap_interval != nullptr && !vsync)
                     swap_interval(0);
                 this->vsync = vsync;
 
                 //glEnable(GL_TEXTURE_2D);
                 glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
+
+                glEnable(GL_BLEND);
+                glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
                 return true;
             }
@@ -173,7 +175,7 @@
             }
 
             inline bool renderer_opengl10::swap_buffers() noexcept {
-                BOOL result = SwapBuffers(device_context);
+                const BOOL result = SwapBuffers(device_context);
                 if (vsync) {
                     if (result != TRUE) [[unlikely]]
                         return false;
