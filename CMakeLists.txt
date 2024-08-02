@@ -3,7 +3,8 @@ project(Library)
 
 set(CMAKE_CXX_STANDARD 23)
 
-link_libraries(X11 GL)
+#link_libraries(X11 GL) # linux libraries
+link_libraries(OpenGL32 Dwmapi) # win32 libraries
 
 add_executable(Library main.cpp
         lib/types.hpp
