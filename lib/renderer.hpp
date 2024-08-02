@@ -51,9 +51,6 @@
 
         // OpenGL 1.0 renderer
         class renderer_opengl10 final : public renderer {
-        public:
-            static opengl_swap_interval swap_interval;
-
         private:
             #ifdef _WIN32
                 HGLRC render_context{};
@@ -64,6 +61,7 @@
             #endif
 
             opengl_device_context device_context{};
+            opengl_swap_interval swap_interval = nullptr;
             bool vsync : 1 = false;
 
         public:
@@ -75,6 +73,7 @@
             bool swap_buffers() noexcept override;
             void prepare_drawing() noexcept override;
             void update_viewport(const vec2i& pos, const vec2i& size) noexcept override;
+            void set_swap_interval(opengl_swap_interval swap_interval) noexcept;
 
             void clear_buffer(const color4& color, bool depth) noexcept;
             void draw_layer_quad(const vec2f& offset, const vec2f& scale, const color4& color) noexcept;
@@ -91,8 +90,6 @@
 
         // Implementations
 
-        opengl_swap_interval renderer_opengl10::swap_interval = nullptr;
-
         inline void renderer_opengl10::prepare_drawing() noexcept {
             glEnable(GL_BLEND);
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -100,6 +97,10 @@
 
         inline void renderer_opengl10::update_viewport(const vec2i &pos, const vec2i &size) noexcept {
             glViewport(pos.x, pos.y, size.x, size.y);
+        }
+
+        inline void renderer_opengl10::set_swap_interval(const opengl_swap_interval swap_interval) noexcept {
+            this->swap_interval = swap_interval;
         }
 
         inline void renderer_opengl10::clear_buffer(const color4& color, const bool depth) noexcept {
@@ -158,7 +159,7 @@
                     swap_interval(0);
                 this->vsync = vsync;
 
-                glEnable(GL_TEXTURE_2D);
+                //glEnable(GL_TEXTURE_2D);
                 glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
 
                 return true;
@@ -166,7 +167,9 @@
 
             inline bool renderer_opengl10::destroy() noexcept {
                 BOOL result = wglDeleteContext(render_context)
-                return result == TRUE;
+                if (result == FALSE) return false;
+                result = DeleteDC(device_context);
+                return result != 0;
             }
 
             inline bool renderer_opengl10::swap_buffers() noexcept {
@@ -207,14 +210,19 @@
                 }
 
                 glEnable(GL_TEXTURE_2D);
-                glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
+                glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_FASTEST);
 
                 return true;
             }
 
             inline bool renderer_opengl10::destroy() noexcept {
+                if (device_context == nullptr)
+                    return true;
+
                 glXMakeCurrent(display, None, nullptr);
                 glXDestroyContext(display, device_context);
+                device_context = nullptr;
+
                 return true;
             }
 
