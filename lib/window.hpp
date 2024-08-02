@@ -169,6 +169,8 @@
 
         public:
             // Destroys the window and frees up resources
+            // Don't call it after start_system_event_loop(),
+            // call it after your game loop (while (wnd.open()) {...} >here<)
             bool cleanup() noexcept;
 
             // Creates the window at pos with the Size: size
@@ -193,7 +195,7 @@
             [[nodiscard]] bool has_opengl() const noexcept { return opengl; }
 
             #ifdef _WIN32
-                [[nodiscard]] HWND& native() noexcept { reutrn native_window; }
+                [[nodiscard]] HWND& native() noexcept { return native_window; }
             #elif defined(__linux__)
                 [[nodiscard]] Window& native() noexcept { return native_window; }
                 [[nodiscard]] Window& native_root() noexcept { return window_root; }
