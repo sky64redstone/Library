@@ -11,7 +11,6 @@
 
 			constexpr color3() noexcept { r = 0; g = 0; b = 0; }
 			constexpr color3(const lib::ubyte r, const lib::ubyte g, const  lib::ubyte b) noexcept : r(r), g(g), b(b) {}
-			constexpr color3(const float r, const float g, const float b) noexcept : r(static_cast<ubyte>(r * 255)), g(static_cast<ubyte>(g * 255)), b(static_cast<ubyte>(b * 255)) {}
 			constexpr color3(const color3& c) noexcept = default;
 			constexpr color3(color3&& c) noexcept : r(c.r), g(c.g), b(c.b) { c.r = 0; c.g = 0; c.b = 0; }
 
@@ -213,8 +212,6 @@
 			constexpr color4() noexcept { data = 0; }
 			constexpr color4(const lib::ubyte r, const lib::ubyte g, const lib::ubyte b, const lib::ubyte a = 0xFF) noexcept : r(r), g(g), b(b), a(a) {}
 			constexpr /*no explicit*/ color4(const lib::uint32 color_code) noexcept : data(color_code) {}
-			constexpr color4(const float r, const float g, const float b, const float a = 1.0f) noexcept
-				: r(static_cast<ubyte>(r * 255)), g(static_cast<ubyte>(g * 255)), b(static_cast<ubyte>(b * 255)), a(static_cast<ubyte>(a * 255)) {}
 			constexpr /*no explicit*/ color4(const color3& c, const lib::ubyte a = 0xFF) noexcept : r(c.r), g(c.g), b(c.b), a(a) {}
 			constexpr color4(const color4& c) noexcept : r(c.r), g(c.g), b(c.b), a(c.a) {}
 			constexpr color4(color4&& c) noexcept : r(c.r), g(c.g), b(c.b), a(c.a) { c.r = 0; c.g = 0; c.b = 0; c.a = 0xFF; }
