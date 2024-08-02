@@ -166,7 +166,7 @@
             }
 
             inline bool renderer_opengl10::destroy() noexcept {
-                BOOL result = wglDeleteContext(render_context)
+                BOOL result = wglDeleteContext(render_context);
                 if (result == FALSE) return false;
                 result = DeleteDC(device_context);
                 return result != 0;
