@@ -51,6 +51,7 @@ void update() noexcept {
     }
 
     opengl.destroy();
+    win.cleanup();
 }
 
 int main() noexcept {
