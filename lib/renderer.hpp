@@ -79,8 +79,7 @@
 
             // draw triangles
 
-            // needs a end_drawing() call
-            void begin_triangles() const noexcept;
+            void begin_triangles() const noexcept; // needs a end_drawing() call
             void draw_triangle(const vec3f& pos1, const color4& color1, const vec3f& pos2, const color4& color2, const vec3f& pos3, const color4& color3) const noexcept;
         };
 
