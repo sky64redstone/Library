@@ -3,8 +3,17 @@ project(Library)
 
 set(CMAKE_CXX_STANDARD 23)
 
-#link_libraries(X11 GL) # linux libraries
-link_libraries(OpenGL32 Dwmapi) # win32 libraries
+if(WIN32)
+    link_libraries(OpenGL32 Dwmapi)
+endif()
+
+if(UNIX)
+    if(!APPLE)
+        if (!CYGWIN) # i dont know how to put this in one line...
+            link_libraries(X11 GL)
+        endif()
+    endif()
+endif()
 
 add_executable(Library main.cpp
         lib/types.hpp
@@ -29,4 +38,5 @@ add_executable(Library main.cpp
         lib/network.hpp
         lib/window.hpp
         lib/renderer.hpp
+        lib/macros.hpp
 )
