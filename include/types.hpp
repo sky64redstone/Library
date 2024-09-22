@@ -14,6 +14,10 @@
 // - native::window_handle
 // - native::file_handle
 // - native::socket_handle
+// - detail::conditional_type_struct
+// - detail::type_from_size_struct
+// - conditional_type<bool, T1, T2>
+// - type_from_size<u32, bool>
 //
 
 #ifndef TYPES_HPP
@@ -34,7 +38,7 @@
     #elif defined(macros_compiler_gcc) || defined(macros_compiler_clang)
       #if defined(__INT8_TYPE__) && defined(__UINT8_TYPE__)    \
         && defined(__INT16_TYPE__) && defined(__UINT16_TYPE__) \
-        && defined(__INT32_TYPE__) && defiend(__UINT32_TYPE__) \
+        && defined(__INT32_TYPE__) && defined(__UINT32_TYPE__) \
         && defined(__INT64_TYPE__) && defined(__UINT64_TYPE__)
 
         using i8  = __INT8_TYPE__;
@@ -83,7 +87,7 @@
     #endif // def(types_found)
     
     #if defined(__SIZEOF_INT128__)
-      using u128 = __uint128;
+      using u128 = unsigned __int128;
     #else // fallback to selfcoded-128-bit-int
       union u128 {
         struct {} empty;
@@ -246,16 +250,62 @@
           int;
         #endif
 
-      
       // Defines a handle from the os to a socket
       // Win32:   SOCKET
       // Linux:   int
       // Macos:   int
       // Android: int
-      using socket_handle = 
+      using socket_handle =
+        #if defined(macros_os_windows)
+          void*;
+        #else
+          int;
+        #endif
 
     } // namespace native
 
+    namespace detail {
+      template <bool, typename T1, typename>
+      struct conditional_type_struct {
+        using type = T1;
+      }; // struct conditional_type_struct
+      
+      template <typename T1, typename T2>
+      struct conditional_type_struct<false, T1, T2> {
+        using type = T2;
+      }; // struct conditional_type_struct
+      
+      template <u32, bool unsigned_type>
+      struct type_from_size_struct {
+        static_assert(false, "Type size not found!");
+      }; // struct type_from_size_struct
+
+      template <bool unsigned_type>
+      struct type_from_size_struct<1, unsigned_type> {
+        using type = conditional_type_struct<unsigned_type, u8, i8>::type;
+      }; // struct type_from_size_struct
+
+      template <bool unsigned_type>
+      struct type_from_size_struct<2, unsigned_type> {
+        using type = conditional_type_struct<unsigned_type, u16, i16>::type;
+      }; // struct type_from_size_struct
+
+      template <bool unsigned_type>
+      struct type_from_size_struct<4, unsigned_type> {
+        using type = conditional_type_struct<unsigned_type, u32, i32>::type;
+      }; // struct type_from_size_struct
+
+      template <bool unsigned_type>
+      struct type_from_size_struct<8, unsigned_type> {
+        using type = conditional_type_struct<unsigned_type, u64, i64>::type;
+      }; // struct type_from_size_struct
+    } // namespace detail
+
+    template <bool enable, typename T1, typename T2>
+    using conditional_type = detail::conditional_type_struct<enable, T1, T2>::type;
+
+    template <u32 size, bool unsigned_type>
+    using type_from_size = detail::type_from_size_struct<size, unsigned_type>::type;
   } // namespace lib
 
 #endif // TYPES_HPP

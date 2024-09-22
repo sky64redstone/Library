@@ -1,4 +1,5 @@
 #include "macros.hpp"
+#include "types.hpp"
 
 #if defined(macros_os_windows)
 
@@ -16,6 +17,10 @@
 
   int main() {
     std::cout << "Hello World from linux!" << std::endl;
+    using type = lib::type_from_size<sizeof(int), true>;
+    type i = 0;
+    i++;
+    return --i;
   }
 
 #endif

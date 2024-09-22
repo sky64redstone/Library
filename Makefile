@@ -139,12 +139,13 @@ $(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp
 	@$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(WARNINGS) -c $< -o $@
 
 # Include automatically generated dependencies
--include $(DEPS)
+#-include $(DEPS)
 
 # Build and run
 run: build
 	$(info Starting program: $(BIN_DIR)/$(EXEC))
-	@cd $(BIN_DIR) && $(EXEC)
+	@echo
+	@$(BIN_DIR)/$(EXEC)
 	@echo Program exited with code: $(RETURN_CODE)
 
 # Clean build and bin directories
