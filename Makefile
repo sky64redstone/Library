@@ -143,8 +143,8 @@ $(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp
 
 # Build and run
 run: build
-	$(info Starting program: $(BIN_DIR)/$(EXEC))
-	@echo
+	$(info Starting program: $(BIN_DIR)/$(EXEC):)
+	$(info )
 	@$(BIN_DIR)/$(EXEC)
 	@echo Program exited with code: $(RETURN_CODE)
 
