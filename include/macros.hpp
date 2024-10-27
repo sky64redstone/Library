@@ -120,6 +120,7 @@
 
   #if !defined(__COUNTER__)
     #define __COUNTER__ 0
+    #warning "Counter macro not defined! Defaulting to 0"
   #endif // __COUNTER__
 
   #define macros_random(min, max) (min + (((__COUNTER__ + (__LINE__ * __LINE__)) * 2654435761L) % (max - min + 1)))

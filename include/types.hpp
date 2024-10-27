@@ -33,10 +33,21 @@
 // - is_signed_type<T>
 // - is_unsigned_type<T>
 // - is_const_type<T>
+// - is_pointer_type<T>
+// - is_lvalue_type<T>
+// - is_rvalue_type<T>
+// - remove_reference<T>
+// - remove_const<T>
+// - remove_volatile<T>
+// - remove_const_volatile<T>
+// - remove_pointer<T>
 //
 
 #ifndef TYPES_HPP
   #define TYPES_HPP
+
+  // keep this at the top, or else msvc won't notice it :(
+  #define NOMINMAX
 
   #include "macros.hpp"
 
@@ -76,7 +87,6 @@
     // fallback to the os definitions
     #if !defined(types_found)
       #if defined(macros_os_windows)
-        #define NOMINMAX
         #include <WinDef.h>
           
         using i8  = INT8;
@@ -648,6 +658,8 @@
 
     macros_constexpr iptr min_iptr = detail::type_traits<iptr>::min();
     macros_constexpr iptr max_iptr = detail::type_traits<iptr>::max();
+    macros_constexpr uptr min_uptr = detail::type_traits<uptr>::min();
+    macros_constexpr uptr max_uptr = detail::type_traits<uptr>::max();
 
     template <typename, typename>
     macros_constexpr bool is_same_type = false;
@@ -691,9 +703,124 @@
 
     template <typename T>
     macros_constexpr bool is_pointer_type = false;
-
     template <typename T>
     macros_constexpr bool is_pointer_type<T*> = true;
+    template <typename T>
+    macros_constexpr bool is_pointer_type<T* const> = true;
+    template <typename T>
+    macros_constexpr bool is_pointer_type<T* volatile> = true;
+    template <typename T>
+    macros_constexpr bool is_pointer_type<T* const volatile> = true;
+
+    template <typename T>
+    macros_constexpr bool is_lvalue_type = false;
+    template <typename T>
+    macros_constexpr bool is_lvalue_type<T&> = true;
+
+    template <typename T>
+    macros_constexpr bool is_rvalue_type = false;
+    template <typename T>
+    macros_constexpr bool is_rvalue_type<T&&> = true;
+
+    namespace detail {
+      template <typename T>
+      struct remove_reference {
+        using type = T;
+      };
+
+      template <typename T>
+      struct remove_reference<T&> {
+        using type = T;
+      };
+
+      template <typename T>
+      struct remove_reference<T&&> {
+        using type = T;
+      };
+
+      template <typename T>
+      struct remove_const {
+        using type = T;
+      };
+
+      template <typename T>
+      struct remove_const<const T> {
+        using type = T;
+      };
+
+      template <typename T>
+      struct remove_volatile {
+        using type = T;
+      };
+
+      template <typename T>
+      struct remove_volatile<volatile T> {
+        using type = T;
+      };
+
+      #if __has_builtin(__remove_cv)
+        template <typename T>
+        struct remove_const_volatile {
+          using type = __remove_cv(T);
+        };
+      #else
+        template <typename T>
+        struct remove_const_volatile {
+          using type = T;
+        };
+
+        template <typename T>
+        struct remove_const_volatile<const T> {
+          using type = T;
+        };
+
+        template <typename T>
+        struct remove_const_volatile<volatile T> {
+          using type = T;
+        };
+
+        template <typename T>
+        struct remove_const_volatile<const volatile T> {
+          using type = T;
+        };
+      #endif
+
+      template <typename T>
+      struct remove_pointer {
+        using type = T;
+      };
+
+      template <typename T>
+      struct remove_pointer<T*> {
+        using type = T;
+      };
+
+      template <typename T>
+      struct remove_pointer<T* const> {
+        using type = T;
+      };
+
+      template <typename T>
+      struct remove_pointer<T* volatile> {
+        using type = T;
+      };
+
+      template <typename T>
+      struct remove_pointer<T* const volatile> {
+        using type = T;
+      };
+    }
+
+    template <typename T>
+    using remove_reference = detail::remove_reference<T>::type;
+    template <typename T>
+    using remove_const = detail::remove_const<T>::type;
+    template <typename T>
+    using remove_volatile = detail::remove_volatile<T>::type;
+    template <typename T>
+    using remove_const_volatile = detail::remove_const_volatile<T>::type;
+    template <typename T>
+    using remove_pointer = detail::remove_pointer<T>::type;
 
   } // namespace lib
 
