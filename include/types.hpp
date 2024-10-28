@@ -41,6 +41,11 @@
 // - remove_volatile<T>
 // - remove_const_volatile<T>
 // - remove_pointer<T>
+// - T&& forward(T&)
+// - constant<T, VALUE>
+// - true_constant
+// - false_constant
+// - optional
 //
 
 #ifndef TYPES_HPP
@@ -797,7 +802,7 @@
 
       template <typename T>
       struct remove_pointer<T* const> {
-        using type = T;
+    using type = T;
       };
 
       template <typename T>
@@ -821,6 +826,63 @@
     using remove_const_volatile = detail::remove_const_volatile<T>::type;
     template <typename T>
     using remove_pointer = detail::remove_pointer<T>::type;
+
+    template <typename T>
+    [[nodiscard]] macros_constexpr T&& forward(remove_reference<T>&& value) macros_noexcept {
+      static_assert(!is_lvalue_type<T>, "A lvalue-ref is not allowed!");
+      return static_cast<T&&>(value);
+    }
+
+    template <typename T>
+    [[nodiscard]] macros_constexpr T&& forward(remove_reference<T>& value) macros_noexcept {
+      return static_cast<T&&>(value);
+    }
+
+    template <typename T, T VALUE>
+    struct constant {
+      static macros_constexpr T value = VALUE;
+
+      using type = T;
+
+      macros_constexpr explicit operator type() const macros_noexcept {
+        return value;
+      }
+
+      [[nodiscard]] macros_constexpr type operator()() const macros_noexcept {
+        return value;
+      }
+    };
+
+    using true_constant = constant<bool, true>;
+    using false_constant = constant<bool, false>;
+
+    template <typename T>
+    struct optional {
+    protected:
+      T _value;
+      bool _has_value;
+
+    public:
+      macros_constexpr optional() macros_noexcept : _value(), _has_value(false) {}
+      macros_constexpr explicit optional(T val) macros_noexcept : _value(val), _has_value(true) {}
+      template <typename... types>
+      macros_constexpr explicit optional(types... params) macros_noexcept : _value(params...), _has_value(true) {}
+
+      [[nodiscard]] macros_constexpr bool empty() con#st macros_noexcept { return !_has_value; }
+      [[nodiscard]] macros_constexpr bool has_value() const macros_noexcept { return _has_value; }
+
+      macros_constexpr const T& value() const macros_noexcept { return _value; }
+      macros_constexpr T& value() macros_noexcept { return _value; }
+
+      macros_constexpr const T& value_or(const T& other) const macros_noexcept { return _has_value ? _value : other; }
+      macros_constexpr T& value_or(T& other) const macros_noexcept { return _has_value ? _value : other; }
+
+      macros_constexpr const optional<T>& or_else(const optional<T>& other) const macros_noexcept { return _has_value ? *this : other; }
+      macros_constexpr optional<T>& or_else(optional<T>& other) macros_noexcept { return _has_value ? *this : other; }
+
+      template <typename FUNC_T>
+      macros_constexpr auto transform(FUNC_T&& func) const macros_noexcept { return func(_value); }
+    };
 
   } // namespace lib
 
