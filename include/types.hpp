@@ -5,8 +5,8 @@
 //
 // Always prefixed with: 'lib::'
 // The namespace 'lib::detail::' is reserved
+// The namespace 'lib::native::' is reserved
 //
-// Data types:
 // - i8, u8
 // - i16, u16
 // - i32, u32
@@ -16,7 +16,7 @@
 // - native::file_handle
 // - native::socket_handle
 // - conditional_type<bool, T1, T2>
-// - type_from_size<u32, bool>
+// -type_from_size<u32, bool>
 // - iptr, uptr
 // - f32, f64
 // - min_[data type], max_[data type]
@@ -51,8 +51,10 @@
 #ifndef TYPES_HPP
   #define TYPES_HPP
 
-  // keep this at the top, or else msvc won't notice it :(
-  #define NOMINMAX
+  #ifdef macros_os_windows
+    // keep this at the top, or else msvc won't notice it :(
+    #define NOMINMAX
+  #endif
 
   #include "macros.hpp"
 
@@ -868,7 +870,7 @@
       template <typename... types>
       macros_constexpr explicit optional(types... params) macros_noexcept : _value(params...), _has_value(true) {}
 
-      [[nodiscard]] macros_constexpr bool empty() con#st macros_noexcept { return !_has_value; }
+      [[nodiscard]] macros_constexpr bool empty() const macros_noexcept { return !_has_value; }
       [[nodiscard]] macros_constexpr bool has_value() const macros_noexcept { return _has_value; }
 
       macros_constexpr const T& value() const macros_noexcept { return _value; }
