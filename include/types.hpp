@@ -16,7 +16,7 @@
 // - native::file_handle
 // - native::socket_handle
 // - conditional_type<bool, T1, T2>
-// -type_from_size<u32, bool>
+// - type_from_size<u32, bool>
 // - iptr, uptr
 // - f32, f64
 // - min_[data type], max_[data type]
