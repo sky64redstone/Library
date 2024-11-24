@@ -13,14 +13,22 @@ SRC_DIR = src
 ifneq ($(OS), Windows_NT)
   SRCS := $(sort $(shell find $(SRC_DIR) -name '*.cpp'))
 else
-	#SRCS := $(sort $(shell dir /s/b $(SRC_DIR)\*.cpp))
   SRCS := $(sort $(shell forfiles /P $(SRC_DIR) /S /M *.cpp /C "cmd /c echo @relpath"))
-  SRCS := $(patsubst ".\\%",$(SRC_DIR)\\%,$(SRCS))
+  SRCS := $(patsubst ".\\%", $(SRC_DIR)\\%, $(SRCS))
 endif
 
 # Include directory
 INCLUDE_DIR = include
 INCLUDES := -I$(INCLUDE_DIR)
+
+# Test directory (searches recursively)
+TEST_DIR = test
+ifneq ($(OS), Windows_NT)
+  TESTS := $(sort $(shell find $(TEST_DIR) -name '*.cpp'))
+else
+  TESTS := $(sort $(shell forfiles /P $(TEST_DIR) /S /M *.cpp /C "cmd /c echo @relpath"))
+  TESTS := $(patsubst ".\\%", $(TEST_DIR)\\%, $(TESTS))
+endif
 
 # C preprocessor settings
 CPPFLAGS = $(INCLUDES) -MMD -MP
@@ -112,13 +120,21 @@ endif
 # Objects
 ifneq ($(OS), windows)
   OBJS := $(SRCS:$(SRC_DIR)/%.cpp=$(BUILD_DIR)/%.o)
+  ifeq ($(test), 1)
+    TEMP := $(TESTS:$(TEST_DIR)/%.cpp=$(BUILD_DIR)/%.o)
+    OBJS := $(OBJS) $(TEMP)
+    SRCS := $(SRCS) $(TESTS)
+  endif
 else
   OBJS := $(SRCS:$(SRC_DIR)\\%.cpp=$(BUILD_DIR)/%.o)
+  ifeq ($(test), 1)
+    OBJS := $(OBJS) $(TESTS:$(TEST_DIR)\\%.cpp=$(BUILD_DIR/%.o))
+    SRCS := $(SRCS) $(TESTS)
+  endif
 endif
 
 # All files (sources and headers)
 FILES   := $(SRCS) $(INCLUDES)
-#FILES := $(shell find $(SRC_DIR) $(INCLUDE_DIR) -name '*.cpp' -o -name '*.h' -o -name '*.hpp')
 
 # Default (first) target
 default: run
@@ -134,6 +150,12 @@ $(BIN_DIR)/$(EXEC): $(OBJS)
 
 # Compile C++ source files
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp
+	$(info Compiling: $<)
+	@$(MKDIR_D)
+	@$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(WARNINGS) -c $< -o $@
+
+# Compile C++ test files
+$(BUILD_DIR)/%.o: $(TEST_DIR)/%.cpp
 	$(info Compiling: $<)
 	@$(MKDIR_D)
 	@$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(WARNINGS) -c $< -o $@
@@ -168,7 +190,8 @@ help:
 	$(info | )
 	$(info | Options:)
 	$(info | 	release=1 Build in release mode instead of debug mode)
-	$(info | 	win32=1   Build for 32-bit Windows)
+	$(info |	win32=1   Build for 32-bit Windows)
+	$(info |	test=1    Build with test files)
 
 # Print Make variables
 print:
@@ -182,6 +205,8 @@ print:
 	$(info SRCS: $(SRCS))
 	$(info INCLUDE_DIR: $(INCLUDE_DIR))
 	$(info INCLUDES: $(INCLUDES))
+	$(info TEST_DIR: $(TEST_DIR))
+	$(info TESTS: $(TESTS))
 	$(info FILES: $(FILES))
 	$(info OBJS: $(OBJS))
 	$(info CXX: $(CXX))
